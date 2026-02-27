@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Lector QR #SaludUAL</title>
     <link href="https://fonts.googleapis.com/css2?family=Catamaran:wght@300;500;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/html5-qrcode"></script>
@@ -13,207 +13,257 @@
             --success: #2ecc71;
             --danger: #e74c3c;
             --warning: #f1c40f;
-            --light: #f8f9fa;
-            --dark: #2c3e50;
+            --bg: #f8fafc;
+            --white: #ffffff;
         }
 
         body {
             font-family: 'Catamaran', sans-serif;
-            background-color: #f0f2f5;
+            background-color: var(--bg);
             margin: 0;
-            color: var(--dark);
-            -webkit-tap-highlight-color: transparent;
+            color: #1e293b;
         }
 
-        /* Header Moderno */
-        .header {
-            background: var(--ual-blue);
-            color: white;
-            padding: 25px 15px;
-            text-align: center;
-            border-bottom-left-radius: 25px;
-            border-bottom-right-radius: 25px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        }
-
-        .header h1 { margin: 0; font-size: 1.6rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
-
-        .container { max-width: 480px; margin: -20px auto 0; padding: 0 15px 100px; }
-
-        .card {
-            background: white;
-            border-radius: 20px;
+        /* --- PANTALLA DE INICIO CON LOGO ESCÁNER --- */
+        .login-screen {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--ual-blue) 0%, #0056a3 100%);
             padding: 20px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
-            margin-bottom: 20px;
-            border: 1px solid rgba(0,0,0,0.03);
-        }
-
-        /* Inputs y Botones Estilizados */
-        input, select, button {
-            width: 100%;
-            padding: 15px;
-            margin: 10px 0;
-            border-radius: 12px;
-            border: 2px solid #eee;
-            font-family: inherit;
-            font-size: 1rem;
-            transition: all 0.3s ease;
             box-sizing: border-box;
         }
 
-        input:focus { border-color: var(--ual-accent); outline: none; box-shadow: 0 0 8px rgba(0,118,192,0.2); }
+        .login-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 30px;
+            padding: 40px 30px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+
+        /* Logo de Escáner Animado */
+        .scanner-logo {
+            width: 100px;
+            height: 100px;
+            background: var(--white);
+            border-radius: 20px;
+            margin: 0 auto 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            border: 4px solid var(--ual-blue);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .qr-icon {
+            font-size: 50px;
+            z-index: 1;
+        }
+
+        .scanner-line {
+            position: absolute;
+            width: 100%;
+            height: 4px;
+            background: var(--danger);
+            box-shadow: 0 0 10px var(--danger);
+            top: 0;
+            left: 0;
+            animation: scan 2s infinite ease-in-out;
+            z-index: 2;
+        }
+
+        @keyframes scan {
+            0%, 100% { top: 5%; }
+            50% { top: 90%; }
+        }
+
+        .login-card h2 { margin: 0; color: var(--ual-blue); font-weight: 800; font-size: 1.9rem; letter-spacing: -1px; }
+        .login-card p { color: #64748b; margin-bottom: 30px; font-weight: 400; font-size: 0.95rem; }
+
+        /* --- ELEMENTOS DE FORMULARIO --- */
+        .input-group { text-align: left; margin-bottom: 15px; }
+        .input-group label { display: block; margin-left: 10px; margin-bottom: 5px; font-size: 0.75rem; font-weight: 800; color: var(--ual-blue); text-transform: uppercase; letter-spacing: 0.5px; }
+
+        input, select, button {
+            width: 100%;
+            padding: 16px;
+            border-radius: 16px;
+            border: 2px solid #e2e8f0;
+            font-family: inherit;
+            font-size: 1rem;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+        }
+
+        input:focus, select:focus { border-color: var(--ual-accent); outline: none; background: white; }
 
         button {
             background: var(--ual-blue);
             color: white;
             border: none;
-            font-weight: 700;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        button:active { transform: scale(0.96); }
-        .btn-outline { background: white; color: var(--ual-blue); border: 2px solid var(--ual-blue); }
-        .btn-danger { background: var(--danger); }
-
-        /* Lista de Asistentes */
-        .item-asistente {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px;
-            border-radius: 12px;
-            margin-bottom: 10px;
-            background: #fff;
-            transition: 0.3s;
-            border: 1px solid #eee;
-        }
-
-        .item-asistente.presente {
-            border-color: var(--success);
-            background: #f0fff4;
-        }
-
-        .item-asistente .info b { display: block; font-size: 1.05rem; }
-        .item-asistente .info span { font-size: 0.85rem; color: #7f8c8d; }
-
-        /* Status Badges */
-        .badge {
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.75rem;
             font-weight: 800;
-            text-transform: uppercase;
-        }
-        .badge-success { background: var(--success); color: white; }
-        .badge-wait { background: #eee; color: #777; }
-
-        /* Toast Notifications */
-        #toast {
-            position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            padding: 15px 25px;
-            border-radius: 50px;
-            color: white;
-            font-weight: 700;
-            display: none;
-            z-index: 1000;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            animation: slideUp 0.3s ease;
+            cursor: pointer;
+            letter-spacing: 0.5px;
+            box-shadow: 0 6px 15px rgba(0,60,113,0.25);
+            margin-top: 10px;
         }
 
-        @keyframes slideUp { from { bottom: -50px; opacity: 0; } to { bottom: 30px; opacity: 1; } }
+        button:hover { background: #002d55; transform: translateY(-2px); }
+        button:active { transform: translateY(0); }
 
-        /* Scanner Box */
-        #reader { border-radius: 15px; overflow: hidden; border: none !important; }
-        
+        .btn-admin { background: transparent; color: #94a3b8; border: none; font-size: 0.85rem; margin-top: 15px; text-decoration: underline; box-shadow: none; cursor: pointer; }
+
+        /* --- FEEDBACK A PANTALLA COMPLETA --- */
+        #visual-feedback {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            display: none; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 10000; color: white; text-align: center; padding: 30px; box-sizing: border-box;
+        }
+        #visual-feedback h2 { font-size: 3.5rem; margin: 0; font-weight: 800; line-height: 1.1; }
+        #visual-feedback p { font-size: 1.8rem; margin-top: 15px; font-weight: 300; }
+
+        /* --- INTERFAZ APP --- */
+        .app-header { background: var(--ual-blue); color: white; padding: 20px; text-align: center; border-radius: 0 0 25px 25px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .container { max-width: 500px; margin: 0 auto; padding: 15px; }
+        .card { background: white; border-radius: 20px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 15px; border: 1px solid #f1f5f9; }
+
+        .item-asistente {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 15px; border-bottom: 1px solid #f1f5f9;
+        }
+        .item-asistente.presente { border-left: 5px solid var(--success); background: #f0fff4; }
+
+        #toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); padding: 12px 25px; border-radius: 50px; color: white; z-index: 9999; display: none; font-weight: 500; font-size: 0.9rem; }
+
         .view { display: none; }
-        .view.active { display: block; }
+        .view.active { display: block; animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
-<div id="toast"></div>
-
-<div class="header">
-    <h1>#SaludUAL</h1>
-    <p style="margin:5px 0 0; font-weight:300; opacity:0.8">Control de Acceso Inteligente</p>
+<div id="visual-feedback">
+    <div style="font-size: 6rem; margin-bottom: 20px;" id="fb-icon"></div>
+    <h2 id="fb-title"></h2>
+    <p id="fb-name"></p>
 </div>
 
-<div class="container">
-    
-    <div id="view-login" class="view active">
-        <div class="card" style="margin-top: 20px;">
-            <h2 style="text-align:center; color: var(--ual-blue)">Bienvenido</h2>
-            <input type="text" id="verificador-name" placeholder="Tu Nombre y Apellidos">
-            <select id="actividad-select"><option>Cargando actividades...</option></select>
-            <input type="password" id="login-pass" placeholder="Contraseña de Acceso">
-            <button onclick="intentarLogin()">COMENZAR VERIFICACIÓN</button>
-            <button class="btn-outline" onclick="accesoAdmin()" style="margin-top:15px">PANEL ADMINISTRADOR</button>
+<div id="toast"></div>
+
+<div id="view-login" class="view active">
+    <div class="login-screen">
+        <div class="login-card">
+            <div class="scanner-logo">
+                <div class="qr-icon">🔳</div>
+                <div class="scanner-line"></div>
+            </div>
+            <h2>SaludUAL</h2>
+            <p>Escáner de Asistencia</p>
+            
+            <div class="input-group">
+                <label>Verificador</label>
+                <input type="text" id="verificador-name" placeholder="Tu nombre">
+            </div>
+
+            <div class="input-group">
+                <label>Actividad del Evento</label>
+                <select id="actividad-select"><option value="">Conectando con la base...</option></select>
+            </div>
+
+            <div class="input-group">
+                <label>Clave de Acceso</label>
+                <input type="password" id="login-pass" placeholder="••••">
+            </div>
+
+            <button onclick="intentarLogin()">INICIAR LECTURA QR</button>
+            <button class="btn-admin" onclick="accesoAdmin()">Acceso Administración</button>
         </div>
+        <p style="color: rgba(255,255,255,0.5); font-size: 0.75rem; margin-top: 25px; letter-spacing: 1px;">UNIVERSIDAD DE ALMERÍA</p>
+    </div>
+</div>
+
+<div id="view-app" class="view">
+    <div class="app-header">
+        <h1 style="margin:0; font-size: 1.3rem; font-weight: 800;">Lector de Asistencia</h1>
+        <span id="display-actividad" style="font-weight:300; opacity:0.8; font-size:0.85rem;"></span>
     </div>
 
-    <div id="view-app" class="view">
-        <div class="card" style="padding:10px; margin-top:20px;">
+    <div class="container">
+        <div class="card" style="padding:10px; border: 2px solid var(--ual-blue);">
             <div id="reader"></div>
         </div>
 
         <div class="card">
-            <input type="text" id="input-search" placeholder="🔍 Buscar por nombre o DNI..." onkeyup="filtrarLista()">
-            <div id="count-box" style="font-size: 0.9rem; color: #666; margin-bottom: 10px;"></div>
-            <div id="lista-asistentes">
-                </div>
+            <input type="text" id="input-search" placeholder="🔍 Buscar por Nombre o DNI..." onkeyup="filtrarLista()" style="background: #f8fafc; border-color: #f1f5f9;">
+            <div id="lista-asistentes" style="max-height: 300px; overflow-y: auto; margin-top: 10px;"></div>
         </div>
 
-        <button class="btn-outline" onclick="showView('view-registro-rapido')">➕ REGISTRO RÁPIDO</button>
-        <button class="btn-danger" onclick="location.reload()" style="margin-top:15px">CERRAR SESIÓN</button>
+        <button onclick="showView('view-registro-rapido')" class="btn-outline">➕ REGISTRO RÁPIDO</button>
+        <button onclick="location.reload()" style="background:none; color:#94a3b8; font-size:0.85rem; text-decoration:none; margin-top: 15px;">Finalizar Sesión</button>
     </div>
+</div>
 
-    <div id="view-registro-rapido" class="view">
-        <div class="card" style="margin-top:20px;">
-            <h3>📝 Nuevo Registro</h3>
+<div id="view-registro-rapido" class="view">
+    <div class="container" style="margin-top: 40px;">
+        <div class="card">
+            <h3 style="color:var(--ual-blue); margin-top:0; font-weight: 800;">Registro Manual</h3>
+            <p style="font-size: 0.85rem; color: #64748b; margin-top: -10px;">Para asistentes no inscritos previamente.</p>
             <input type="text" id="reg-nombre" placeholder="Nombre">
-            <input type="text" id="reg-ape1" placeholder="Primer Apellido">
-            <input type="text" id="reg-dni" placeholder="DNI / NIE">
-            <input type="email" id="reg-email" placeholder="Email">
-            <button onclick="procesarRegistroRapido()">CONFIRMAR REGISTRO</button>
-            <button class="btn-outline" onclick="showView('view-app')">CANCELAR</button>
+            <input type="text" id="reg-ape1" placeholder="Apellidos">
+            <input type="text" id="reg-dni" placeholder="DNI / NIE / Pasaporte">
+            <input type="email" id="reg-email" placeholder="Correo electrónico">
+            <button onclick="procesarRegistroRapido()" style="margin-top:10px;">CONFIRMAR E INGRESAR</button>
+            <button onclick="showView('view-app')" class="btn-admin" style="color: var(--ual-blue);">Volver al lector</button>
         </div>
     </div>
 </div>
 
 <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzaC2ciwm409oYmSvKVP7IViHk-wMWXOUL771r2sTbT7dGT7Ga25k5tl6jXpzttZcsXrA/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwJQMxFzVPBvTE6GfWfc47iMhDCtOmb5rPFXIXW5-nmF4xSziHjH4l9My_c3E0amSki/exec';
     let dbInscritos = [];
-    let asistenciasLocales = new Set(); // Para control visual rápido
+    let asistenciasLocales = new Set();
     let configActual = { verificador: '', actividad: '' };
     let html5QrCode;
 
-    // --- TOAST NOTIFICATION ---
-    function notify(msg, type = 'success') {
-        const toast = document.getElementById('toast');
-        toast.innerText = msg;
-        toast.style.display = 'block';
-        toast.style.background = type === 'success' ? 'var(--success)' : 'var(--danger)';
-        setTimeout(() => { toast.style.display = 'none'; }, 3000);
-    }
-
-    // --- CARGA INICIAL ---
+    // --- CARGA DE ACTIVIDADES ---
     window.onload = async () => {
         try {
             const resp = await fetch(SCRIPT_URL + "?action=getActividades");
             const acts = await resp.json();
             const sel = document.getElementById('actividad-select');
-            sel.innerHTML = '<option value="">Seleccione la Actividad</option>';
+            sel.innerHTML = '<option value="">Selecciona actividad...</option>';
             acts.forEach(a => sel.innerHTML += `<option value="${a}">${a}</option>`);
-        } catch(e) { notify("Error cargando actividades", "error"); }
+        } catch(e) { notify("Error de conexión", "#e74c3c"); }
     };
+
+    function notify(msg, color = 'var(--ual-blue)') {
+        const t = document.getElementById('toast');
+        t.innerText = msg; t.style.background = color; t.style.display = 'block';
+        setTimeout(() => t.style.display = 'none', 3000);
+    }
+
+    function showVisualFeedback(tipo, titulo, nombre) {
+        const fb = document.getElementById('visual-feedback');
+        const icon = document.getElementById('fb-icon');
+        const title = document.getElementById('fb-title');
+        const msg = document.getElementById('fb-name');
+        fb.style.display = 'flex';
+        
+        if (tipo === 'success') { fb.style.backgroundColor = 'var(--success)'; icon.innerText = '✅'; title.innerText = 'BIENVENIDO/A'; }
+        else if (tipo === 'error') { fb.style.backgroundColor = 'var(--danger)'; icon.innerText = '❌'; title.innerText = 'DENEGADO'; }
+        else if (tipo === 'warning') { fb.style.backgroundColor = 'var(--warning)'; icon.innerText = '⚠️'; title.innerText = 'YA ESTÁ DENTRO'; }
+
+        msg.innerText = nombre;
+        setTimeout(() => { fb.style.display = 'none'; if (html5QrCode && html5QrCode.getState() === 3) html5QrCode.resume(); }, 2500);
+    }
 
     function showView(id) {
         document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
@@ -224,18 +274,14 @@
     function intentarLogin() {
         const v = document.getElementById('verificador-name').value;
         const a = document.getElementById('actividad-select').value;
-        const p = document.getElementById('login-pass').value;
-
-        if(!v || !a || p !== "1234") {
-            notify("Datos incompletos o clave errónea", "error");
-            return;
-        }
+        if(!v || !a || document.getElementById('login-pass').value !== "1234") return notify("Datos incompletos", "#e74c3c");
         configActual = { verificador: v, actividad: a };
+        document.getElementById('display-actividad').innerText = a;
         cargarDatos();
     }
 
     async function cargarDatos() {
-        notify("Sincronizando listado...");
+        notify("Sincronizando...");
         const resp = await fetch(SCRIPT_URL + "?action=getInscritos");
         dbInscritos = await resp.json();
         showView('view-app');
@@ -244,93 +290,55 @@
 
     function renderLista(f = "") {
         const cont = document.getElementById('lista-asistentes');
-        const countBox = document.getElementById('count-box');
         cont.innerHTML = "";
-        
-        const filtrados = dbInscritos.filter(i => 
-            i.Actividad === configActual.actividad && 
-            (i.Nombre.toLowerCase().includes(f.toLowerCase()) || i.DNI.includes(f))
-        );
-
-        countBox.innerText = `Mostrando ${filtrados.length} personas`;
-
-        filtrados.forEach(i => {
-            const estaPresente = asistenciasLocales.has(i.DNI);
-            const div = document.createElement('div');
-            div.className = `item-asistente ${estaPresente ? 'presente' : ''}`;
-            div.innerHTML = `
-                <div class="info">
-                    <b>${i.Nombre}</b>
-                    <span>DNI: ${i.DNI}</span>
-                </div>
-                <div>
-                    ${estaPresente 
-                        ? `<button class="btn-outline" style="width:auto; padding:5px 10px; font-size:12px; border-color:var(--danger); color:var(--danger)" onclick="toggleAsistencia('${i.Nombre}','${i.DNI}', true)">DESMARCAR</button>`
-                        : `<button style="width:auto; padding:8px 15px;" onclick="toggleAsistencia('${i.Nombre}','${i.DNI}', false)">MARCAR</button>`
-                    }
-                </div>
-            `;
-            cont.appendChild(div);
+        dbInscritos.filter(i => i.Actividad === configActual.actividad && (i.Nombre.toLowerCase().includes(f.toLowerCase()) || i.DNI.includes(f)))
+        .forEach(i => {
+            const presente = asistenciasLocales.has(i.DNI);
+            cont.innerHTML += `<div class="item-asistente ${presente ? 'presente' : ''}">
+                <div class="info"><b>${i.Nombre}</b><span>DNI: ${i.DNI}</span></div>
+                <button style="width:auto; padding:8px 15px; border-radius:12px" onclick="registrar('${i.Nombre}','${i.DNI}','MANUAL')">
+                    ${presente ? '✅' : 'MARCAR'}
+                </button></div>`;
         });
     }
 
     function filtrarLista() { renderLista(document.getElementById('input-search').value); }
 
-    // --- LOGICA DE REGISTRO (MARCAR / DESMARCAR) ---
-    async function toggleAsistencia(nombre, dni, esAnulacion) {
-        if (esAnulacion) {
-            asistenciasLocales.delete(dni);
-            notify("Asistencia anulada localmente");
-        } else {
-            asistenciasLocales.add(dni);
-            notify(`✅ ${nombre} registrado`);
-        }
-        
+    async function registrar(nombre, dni, tipo, email = "") {
+        if(asistenciasLocales.has(dni) && tipo === 'MANUAL') return;
+        asistenciasLocales.add(dni);
         renderLista(document.getElementById('input-search').value);
-
-        // Envío a Google Sheets (en segundo plano)
-        fetch(SCRIPT_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            body: JSON.stringify({
-                nombre: nombre,
-                dni: dni,
-                actividad: configActual.actividad,
-                verificador: configActual.verificador,
-                tipo: esAnulacion ? "ANULACIÓN" : "MANUAL"
-            })
-        });
+        fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ nombre: nombre, dni: dni, actividad: configActual.actividad, verificador: configActual.verificador, tipo: tipo, email: email }) });
     }
 
     function procesarRegistroRapido() {
-        const n = document.getElementById('reg-nombre').value;
-        const d = document.getElementById('reg-dni').value;
-        const e = document.getElementById('reg-email').value;
-        if(!n || !d) return notify("Nombre y DNI obligatorios", "error");
-        
-        toggleAsistencia(n, d, false);
+        const n = document.getElementById('reg-nombre').value, d = document.getElementById('reg-dni').value, e = document.getElementById('reg-email').value;
+        if(!n || !d) return notify("Faltan datos", "#e74c3c");
+        registrar(`${n} ${document.getElementById('reg-ape1').value}`, d, "RÁPIDO", e);
+        showVisualFeedback('success', '', n);
         showView('view-app');
     }
 
     function iniciarEscaner() {
         if(!html5QrCode) html5QrCode = new Html5Qrcode("reader");
         html5QrCode.start({ facingMode: "environment" }, { fps: 15, qrbox: 250 }, (text) => {
+            html5QrCode.pause(true);
             const enc = dbInscritos.find(i => (i.DNI === text || i.CodigoValidacion === text) && i.Actividad === configActual.actividad);
             if(enc) {
-                if(!asistenciasLocales.has(enc.DNI)) {
-                    toggleAsistencia(enc.Nombre, enc.DNI, false);
-                    vibratePhone(); // Feedback háptico
-                } else {
-                    notify("Ya estaba registrado", "warning");
-                }
-            } else {
-                notify("QR no válido para esta actividad", "error");
-            }
+                if(!asistenciasLocales.has(enc.DNI)) { registrar(enc.Nombre, enc.DNI, "QR"); showVisualFeedback('success', '', enc.Nombre); if(navigator.vibrate) navigator.vibrate(100); }
+                else { showVisualFeedback('warning', '', enc.Nombre); }
+            } else { showVisualFeedback('error', '', 'ACCESO DENEGADO'); }
         }).catch(() => {});
     }
 
-    function vibratePhone() { if(navigator.vibrate) navigator.vibrate(100); }
-    function accesoAdmin() { const p = prompt("Clave:"); if(p==="adminUAL") showView('view-admin'); }
+    async function accesoAdmin() { 
+        const p = prompt("Clave:"); 
+        if(p === "adminUAL") {
+            const resp = await fetch(SCRIPT_URL + "?action=getStats");
+            const s = await resp.json();
+            alert(`Resumen SaludUAL:\nTotal Inscritos: ${s.totalInscritos}\nAsistencias hoy: ${s.totalAsistencias}`);
+        }
+    }
 </script>
 </body>
 </html>
