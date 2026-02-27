@@ -3,76 +3,297 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Escáner de Asistencia QR</title>
+    <title>Lector QR #SaludUAL</title>
+    <link href="https://fonts.googleapis.com/css2?family=Catamaran:wght@300;500;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; background-color: #f4f7f9; margin: 0; padding: 20px; }
-        .container { max-width: 450px; margin: auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        h2 { color: #2c3e50; }
-        #reader { width: 100%; border-radius: 10px; overflow: hidden; border: none !important; }
-        #status { margin-top: 20px; padding: 15px; border-radius: 8px; font-weight: bold; background: #e8f4fd; color: #2980b9; }
-        .footer { margin-top: 20px; font-size: 0.8em; color: #7f8c8d; }
+        :root {
+            --ual-blue: #003C71;
+            --ual-accent: #0076c0;
+            --bg: #f4f7f9;
+            --success: #28a745;
+            --danger: #dc3545;
+        }
+
+        body {
+            font-family: 'Catamaran', sans-serif;
+            background-color: var(--bg);
+            margin: 0;
+            color: #333;
+        }
+
+        /* Header */
+        .header {
+            background: var(--ual-blue);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .header h1 { margin: 0; font-size: 1.4rem; font-weight: 800; letter-spacing: 1px; }
+        .logo-container { font-size: 40px; margin-bottom: 5px; }
+
+        .container { max-width: 500px; margin: 20px auto; padding: 15px; }
+
+        /* Tarjetas y UI */
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+
+        input, select, button {
+            width: 100%;
+            padding: 14px;
+            margin: 10px 0;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+            font-family: 'Catamaran', sans-serif;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+
+        button {
+            background: var(--ual-blue);
+            color: white;
+            border: none;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:active { transform: scale(0.98); }
+        .btn-outline { background: transparent; color: var(--ual-blue); border: 2px solid var(--ual-blue); }
+        .btn-danger { background: var(--danger); }
+
+        /* Vistas */
+        .view { display: none; }
+        .active { display: block; animation: fadeIn 0.5s; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Listado */
+        .search-box { position: sticky; top: 0; background: var(--bg); z-index: 10; padding-bottom: 10px; }
+        .item-asistente {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        .item-asistente.presente { border-left: 5px solid var(--success); background: #f0fff4; }
+        
+        /* Dashboard Admin */
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .stat-card { background: var(--ual-blue); color: white; padding: 15px; border-radius: 12px; text-align: center; }
+        .stat-card span { font-size: 1.8rem; font-weight: 800; display: block; }
     </style>
 </head>
 <body>
 
+<div class="header">
+    <div class="logo-container">🔳</div>
+    <h1>#SaludUAL <small style="font-weight: 300;">Lector QR</small></h1>
+</div>
+
 <div class="container">
-    <h2>Control de Acceso</h2>
-    <div id="reader"></div>
-    <div id="status">Esperando escaneo de código...</div>
-    <div class="footer">Asegúrate de dar permisos de cámara al navegador</div>
+
+    <div id="view-login" class="view active">
+        <div class="card">
+            <h3>Acceso Verificador</h3>
+            <input type="text" id="verificador-name" placeholder="Nombre y Apellidos">
+            <select id="actividad-select">
+                <option value="">Seleccione Actividad...</option>
+                <option value="Opción 1">Opción 1</option>
+                <option value="Opción 2">Opción 2</option>
+            </select>
+            <input type="password" id="login-pass" placeholder="Contraseña">
+            <button onclick="intentarLogin()">Entrar al Verificador</button>
+            <button class="btn-outline" onclick="accesoAdmin()">Panel Administrador</button>
+        </div>
+    </div>
+
+    <div id="view-app" class="view">
+        <div class="card" style="padding: 0; overflow: hidden;">
+            <div id="reader"></div>
+        </div>
+        
+        <div class="search-box">
+            <input type="text" id="input-search" placeholder="🔍 Buscar por nombre o DNI..." onkeyup="filtrarLista()">
+        </div>
+
+        <div id="lista-asistentes" class="card">
+            Cargando listado...
+        </div>
+
+        <button onclick="showView('view-registro-rapido')">+ Registro Rápido (No Inscritos)</button>
+        <button class="btn-outline" onclick="location.reload()">Cerrar Sesión</button>
+    </div>
+
+    <div id="view-registro-rapido" class="view">
+        <div class="card">
+            <h3>Registro Rápido</h3>
+            <p>Para personas que no figuran en el listado oficial.</p>
+            <input type="text" id="reg-nombre" placeholder="Nombre">
+            <input type="text" id="reg-ape1" placeholder="Primer Apellido">
+            <input type="text" id="reg-ape2" placeholder="Segundo Apellido">
+            <input type="text" id="reg-dni" placeholder="DNI">
+            <input type="email" id="reg-email" placeholder="Email">
+            <button onclick="procesarRegistroRapido()">Registrar Asistencia</button>
+            <button class="btn-outline" onclick="showView('view-app')">Volver</button>
+        </div>
+    </div>
+
+    <div id="view-admin" class="view">
+        <div class="card">
+            <h3>Resumen de Actividad</h3>
+            <div id="admin-stats" class="stats-grid">
+                </div>
+            <div id="admin-detalles" style="margin-top: 20px; font-size: 0.9rem;"></div>
+            <button class="btn-outline" onclick="location.reload()" style="margin-top:20px;">Salir</button>
+        </div>
+    </div>
+
 </div>
 
 <script>
-    // TU URL DE GOOGLE APPS SCRIPT
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbxpJrNV4YAeEqVH28CGmXJV2_z4MnJA0Tv0PGK45cORSrQlmy6moIN9dkec8xTvvGMXcA/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzeTt5OJpTB4UPVTG8VjTLWBsFRUAs-1oNqYykDGvdCJpwt9DVdNmJpKaDjRBQhDmp0TQ/exec';
+    let dbInscritos = [];
+    let dbAsistencias = [];
+    let configActual = { verificador: '', actividad: '' };
 
-    function onScanSuccess(decodedText) {
-        // Pausar el escáner para evitar envíos duplicados
-        html5QrcodeScanner.clear();
+    // --- LOGICA DE NAVEGACION ---
+    function showView(id) {
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        if(id === 'view-app') iniciarEscaner();
+    }
+
+    function intentarLogin() {
+        const v = document.getElementById('verificador-name').value;
+        const a = document.getElementById('actividad-select').value;
+        const p = document.getElementById('login-pass').value;
+
+        if(!v || !a || p !== "1234") { // Cambia 1234 por tu clave
+            alert("Datos incorrectos o incompletos");
+            return;
+        }
+        configActual.verificador = v;
+        configActual.actividad = a;
+        cargarDatosIniciales();
+    }
+
+    function accesoAdmin() {
+        const p = prompt("Contraseña Maestra:");
+        if(p === "adminUAL") { // Clave Admin
+            showView('view-admin');
+            actualizarDashboard();
+        }
+    }
+
+    // --- LOGICA DE DATOS ---
+    async function cargarDatosIniciales() {
+        document.getElementById('lista-asistentes').innerHTML = "Sincronizando con Google Sheets...";
+        try {
+            const resp = await fetch(SCRIPT_URL + "?action=getInscritos");
+            dbInscritos = await resp.json();
+            showView('view-app');
+            renderLista();
+        } catch(e) { alert("Error de conexión"); }
+    }
+
+    function renderLista(filtro = "") {
+        const container = document.getElementById('lista-asistentes');
+        container.innerHTML = "";
         
-        document.getElementById('status').innerText = "Enviando registro...";
-        document.getElementById('status').style.background = "#fff3cd";
+        const filtrados = dbInscritos.filter(i => 
+            i.Actividad === configActual.actividad && 
+            (i.Nombre.toLowerCase().includes(filtro.toLowerCase()) || i.DNI.includes(filtro))
+        );
 
-        // Preparar los datos
-        const datos = {
-            codigo: decodedText,
-            usuario: "Usuario General" // Aquí podrías poner lógica de perfiles más adelante
-        };
-
-        // ENVÍO A GOOGLE SHEETS
-        fetch(scriptURL, {
-            method: 'POST',
-            mode: 'no-cors', // Evita bloqueos de seguridad del navegador
-            cache: 'no-cache',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(datos)
-        })
-        .then(() => {
-            document.getElementById('status').innerText = "¡REGISTRO EXITOSO!";
-            document.getElementById('status').style.background = "#d4edda";
-            document.getElementById('status').style.color = "#155724";
-            
-            // Reiniciar escáner después de 3 segundos para el siguiente usuario
-            setTimeout(() => { location.reload(); }, 3000);
-        })
-        .catch(error => {
-            alert("Error al enviar: " + error);
-            location.reload();
+        filtrados.forEach(asistente => {
+            const div = document.createElement('div');
+            div.className = 'item-asistente';
+            div.innerHTML = `
+                <div>
+                    <strong>${asistente.Nombre}</strong><br>
+                    <small>${asistente.DNI}</small>
+                </div>
+                <button onclick="registrar('${asistente.Nombre}', '${asistente.DNI}', 'Listado')" style="width:auto">Marcar</button>
+            `;
+            container.appendChild(div);
         });
     }
 
-    // Configuración del escáner
-    let html5QrcodeScanner = new Html5QrcodeScanner(
-        "reader", 
-        { 
-            fps: 10, 
-            qrbox: {width: 250, height: 250},
-            aspectRatio: 1.0
-        }
-    );
-    
-    html5QrcodeScanner.render(onScanSuccess);
+    function filtrarLista() {
+        renderLista(document.getElementById('input-search').value);
+    }
+
+    // --- REGISTRO ---
+    async function registrar(nombre, dni, tipo) {
+        if(!confirm(`¿Registrar asistencia para ${nombre}?`)) return;
+
+        const payload = {
+            nombre: nombre,
+            dni: dni,
+            actividad: configActual.actividad,
+            verificador: configActual.verificador,
+            tipo: tipo
+        };
+
+        // UI Optimista
+        alert("Registrando...");
+
+        await fetch(SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            body: JSON.stringify(payload)
+        });
+
+        alert("✅ Éxito");
+    }
+
+    function procesarRegistroRapido() {
+        const n = document.getElementById('reg-nombre').value;
+        const a1 = document.getElementById('reg-ape1').value;
+        const d = document.getElementById('reg-dni').value;
+        if(!n || !d) return alert("Nombre y DNI obligatorios");
+        
+        registrar(`${n} ${a1}`, d, "Rápido");
+        showView('view-app');
+    }
+
+    // --- ESCANER ---
+    let html5QrCode;
+    function iniciarEscaner() {
+        html5QrCode = new Html5Qrcode("reader");
+        const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+        html5QrCode.start({ facingMode: "environment" }, config, (decodedText) => {
+            // Lógica: El QR contiene el DNI o el CodigoValidacion
+            const encontrado = dbInscritos.find(i => i.DNI === decodedText || i.CodigoValidacion === decodedText);
+            if(encontrado) {
+                html5QrCode.stop();
+                registrar(encontrado.Nombre, encontrado.DNI, "QR");
+                setTimeout(() => iniciarEscaner(), 3000);
+            } else {
+                alert("QR no reconocido en esta actividad");
+            }
+        });
+    }
+
+    // --- ADMIN ---
+    async function actualizarDashboard() {
+        const resp = await fetch(SCRIPT_URL + "?action=getStats"); // Requiere esta función en el script
+        const stats = await resp.json();
+        document.getElementById('admin-stats').innerHTML = `
+            <div class="stat-card">Inscritos<span>${stats.totalInscritos}</span></div>
+            <div class="stat-card">Asistencias<span>${stats.totalAsistencias}</span></div>
+        `;
+    }
+
 </script>
 
 </body>
