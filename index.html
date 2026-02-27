@@ -13,6 +13,7 @@
             --bg: #f4f7f9;
             --success: #28a745;
             --danger: #dc3545;
+            --white: #ffffff;
         }
 
         body {
@@ -20,6 +21,9 @@
             background-color: var(--bg);
             margin: 0;
             color: #333;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
         }
 
         /* Header */
@@ -34,11 +38,11 @@
         .header h1 { margin: 0; font-size: 1.4rem; font-weight: 800; letter-spacing: 1px; }
         .logo-container { font-size: 40px; margin-bottom: 5px; }
 
-        .container { max-width: 500px; margin: 20px auto; padding: 15px; }
+        .container { max-width: 500px; margin: 0 auto; padding: 15px; width: 100%; box-sizing: border-box; }
 
         /* Tarjetas y UI */
         .card {
-            background: white;
+            background: var(--white);
             border-radius: 16px;
             padding: 20px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.05);
@@ -67,29 +71,31 @@
 
         button:active { transform: scale(0.98); }
         .btn-outline { background: transparent; color: var(--ual-blue); border: 2px solid var(--ual-blue); }
-        .btn-danger { background: var(--danger); }
+        .btn-secondary { background: #6c757d; }
 
         /* Vistas */
         .view { display: none; }
-        .active { display: block; animation: fadeIn 0.5s; }
+        .active { display: block; animation: fadeIn 0.4s ease-out; }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         /* Listado */
-        .search-box { position: sticky; top: 0; background: var(--bg); z-index: 10; padding-bottom: 10px; }
+        .search-box { position: sticky; top: 0; background: var(--bg); z-index: 10; padding: 10px 0; }
+        .lista-container { max-height: 400px; overflow-y: auto; }
         .item-asistente {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 15px;
+            padding: 12px;
             border-bottom: 1px solid #eee;
         }
-        .item-asistente.presente { border-left: 5px solid var(--success); background: #f0fff4; }
         
         /* Dashboard Admin */
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
         .stat-card { background: var(--ual-blue); color: white; padding: 15px; border-radius: 12px; text-align: center; }
         .stat-card span { font-size: 1.8rem; font-weight: 800; display: block; }
+
+        #reader { border-radius: 12px; overflow: hidden; border: none !important; width: 100%; }
     </style>
 </head>
 <body>
@@ -103,106 +109,127 @@
 
     <div id="view-login" class="view active">
         <div class="card">
-            <h3>Acceso Verificador</h3>
-            <input type="text" id="verificador-name" placeholder="Nombre y Apellidos">
+            <h3 style="text-align: center; color: var(--ual-blue);">Acceso Verificador</h3>
+            <input type="text" id="verificador-name" placeholder="Nombre y Apellidos del Verificador">
             <select id="actividad-select">
                 <option value="">Seleccione Actividad...</option>
                 <option value="Opción 1">Opción 1</option>
                 <option value="Opción 2">Opción 2</option>
             </select>
-            <input type="password" id="login-pass" placeholder="Contraseña">
-            <button onclick="intentarLogin()">Entrar al Verificador</button>
-            <button class="btn-outline" onclick="accesoAdmin()">Panel Administrador</button>
+            <input type="password" id="login-pass" placeholder="Contraseña de Acceso">
+            <button onclick="intentarLogin()">Acceder</button>
+            <button class="btn-outline" onclick="accesoAdmin()">Panel Administrador (Admin)</button>
         </div>
     </div>
 
     <div id="view-app" class="view">
-        <div class="card" style="padding: 0; overflow: hidden;">
+        <div class="card" style="padding: 10px;">
             <div id="reader"></div>
+            <p id="qr-status" style="text-align:center; font-size: 0.9rem; color: #666;">Escáner activo...</p>
         </div>
         
         <div class="search-box">
             <input type="text" id="input-search" placeholder="🔍 Buscar por nombre o DNI..." onkeyup="filtrarLista()">
         </div>
 
-        <div id="lista-asistentes" class="card">
-            Cargando listado...
+        <div id="lista-asistentes" class="card lista-container">
+            Cargando listado oficial...
         </div>
 
-        <button onclick="showView('view-registro-rapido')">+ Registro Rápido (No Inscritos)</button>
+        <button class="btn-secondary" onclick="showView('view-registro-rapido')">+ Registro Rápido (No Inscritos)</button>
         <button class="btn-outline" onclick="location.reload()">Cerrar Sesión</button>
     </div>
 
     <div id="view-registro-rapido" class="view">
         <div class="card">
-            <h3>Registro Rápido</h3>
-            <p>Para personas que no figuran en el listado oficial.</p>
+            <h3>📝 Registro Rápido</h3>
+            <p style="font-size: 0.9rem; color: #666;">Completa los datos para personas no inscritas.</p>
             <input type="text" id="reg-nombre" placeholder="Nombre">
             <input type="text" id="reg-ape1" placeholder="Primer Apellido">
             <input type="text" id="reg-ape2" placeholder="Segundo Apellido">
             <input type="text" id="reg-dni" placeholder="DNI">
-            <input type="email" id="reg-email" placeholder="Email">
+            <input type="email" id="reg-email" placeholder="Email (Correo electrónico)">
             <button onclick="procesarRegistroRapido()">Registrar Asistencia</button>
-            <button class="btn-outline" onclick="showView('view-app')">Volver</button>
+            <button class="btn-outline" onclick="showView('view-app')">Cancelar / Volver</button>
         </div>
     </div>
 
     <div id="view-admin" class="view">
         <div class="card">
-            <h3>Resumen de Actividad</h3>
+            <h3>📊 Resumen Administrativo</h3>
             <div id="admin-stats" class="stats-grid">
-                </div>
-            <div id="admin-detalles" style="margin-top: 20px; font-size: 0.9rem;"></div>
-            <button class="btn-outline" onclick="location.reload()" style="margin-top:20px;">Salir</button>
+                <div class="stat-card">Inscritos<span id="stat-inscritos">0</span></div>
+                <div class="stat-card">Asistencias<span id="stat-asist">0</span></div>
+            </div>
+            <div style="margin-top:20px;">
+                <p><strong>Actividad:</strong> <span id="admin-act-name">-</span></p>
+                <p><strong>Registros Rápidos:</strong> <span id="stat-rapidos">0</span></p>
+            </div>
+            <button class="btn-outline" onclick="location.reload()" style="margin-top:20px;">Volver al Inicio</button>
         </div>
     </div>
 
 </div>
 
 <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzeTt5OJpTB4UPVTG8VjTLWBsFRUAs-1oNqYykDGvdCJpwt9DVdNmJpKaDjRBQhDmp0TQ/exec';
+    // --- CONFIGURACIÓN ---
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwJQMxFzVPBvTE6GfWfc47iMhDCtOmb5rPFXIXW5-nmF4xSziHjH4l9My_c3E0amSki/exec';
     let dbInscritos = [];
-    let dbAsistencias = [];
     let configActual = { verificador: '', actividad: '' };
+    let html5QrCode;
 
-    // --- LOGICA DE NAVEGACION ---
+    // --- NAVEGACIÓN ---
     function showView(id) {
         document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
         document.getElementById(id).classList.add('active');
-        if(id === 'view-app') iniciarEscaner();
+        
+        // Manejo del escáner
+        if (id === 'view-app') {
+            iniciarEscaner();
+        } else if (html5QrCode) {
+            html5QrCode.stop().catch(() => {});
+        }
     }
 
+    // --- ACCESO ---
     function intentarLogin() {
         const v = document.getElementById('verificador-name').value;
         const a = document.getElementById('actividad-select').value;
         const p = document.getElementById('login-pass').value;
 
-        if(!v || !a || p !== "1234") { // Cambia 1234 por tu clave
-            alert("Datos incorrectos o incompletos");
+        if(!v || !a || p !== "1234") { // Contraseña verificador
+            alert("Por favor, rellene todos los campos. (Clave incorrecta)");
             return;
         }
         configActual.verificador = v;
         configActual.actividad = a;
-        cargarDatosIniciales();
+        cargarDatosInscritos();
     }
 
     function accesoAdmin() {
-        const p = prompt("Contraseña Maestra:");
-        if(p === "adminUAL") { // Clave Admin
+        const p = prompt("Contraseña Maestra Admin:");
+        if(p === "adminUAL") { 
             showView('view-admin');
-            actualizarDashboard();
+            cargarStatsAdmin();
+        } else {
+            alert("Acceso denegado");
         }
     }
 
-    // --- LOGICA DE DATOS ---
-    async function cargarDatosIniciales() {
-        document.getElementById('lista-asistentes').innerHTML = "Sincronizando con Google Sheets...";
+    // --- DATOS ---
+    async function cargarDatosInscritos() {
+        const listaDiv = document.getElementById('lista-asistentes');
+        listaDiv.innerHTML = "Sincronizando listado...";
+        
         try {
             const resp = await fetch(SCRIPT_URL + "?action=getInscritos");
             dbInscritos = await resp.json();
             showView('view-app');
             renderLista();
-        } catch(e) { alert("Error de conexión"); }
+        } catch(e) {
+            alert("Error al conectar con la base de datos de Google.");
+            listaDiv.innerHTML = "Error de carga.";
+        }
     }
 
     function renderLista(filtro = "") {
@@ -214,15 +241,20 @@
             (i.Nombre.toLowerCase().includes(filtro.toLowerCase()) || i.DNI.includes(filtro))
         );
 
+        if(filtrados.length === 0) {
+            container.innerHTML = "<p style='text-align:center; color:#999;'>No hay coincidencias</p>";
+            return;
+        }
+
         filtrados.forEach(asistente => {
             const div = document.createElement('div');
             div.className = 'item-asistente';
             div.innerHTML = `
                 <div>
                     <strong>${asistente.Nombre}</strong><br>
-                    <small>${asistente.DNI}</small>
+                    <small style="color:var(--ual-blue)">DNI: ${asistente.DNI}</small>
                 </div>
-                <button onclick="registrar('${asistente.Nombre}', '${asistente.DNI}', 'Listado')" style="width:auto">Marcar</button>
+                <button onclick="confirmarYRegistrar('${asistente.Nombre}', '${asistente.DNI}', 'Manual')" style="width:auto; padding: 8px 15px;">Marcar</button>
             `;
             container.appendChild(div);
         });
@@ -232,66 +264,99 @@
         renderLista(document.getElementById('input-search').value);
     }
 
-    // --- REGISTRO ---
-    async function registrar(nombre, dni, tipo) {
-        if(!confirm(`¿Registrar asistencia para ${nombre}?`)) return;
+    // --- ACCIÓN DE REGISTRO ---
+    async function confirmarYRegistrar(nombre, dni, tipo, email = "") {
+        if(!confirm(`¿Confirmar asistencia de ${nombre}?`)) return;
+        enviarRegistro(nombre, dni, tipo, email);
+    }
+
+    async function enviarRegistro(nombre, dni, tipo, email = "") {
+        const status = document.getElementById('qr-status');
+        if(status) status.innerText = "Registrando en la nube...";
 
         const payload = {
             nombre: nombre,
             dni: dni,
             actividad: configActual.actividad,
             verificador: configActual.verificador,
-            tipo: tipo
+            tipo: tipo,
+            email: email
         };
 
-        // UI Optimista
-        alert("Registrando...");
-
-        await fetch(SCRIPT_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            body: JSON.stringify(payload)
-        });
-
-        alert("✅ Éxito");
+        try {
+            await fetch(SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                body: JSON.stringify(payload)
+            });
+            alert("✅ Registro guardado en Google Sheets");
+            if(status) status.innerText = "Escáner activo";
+        } catch (e) {
+            alert("❌ Error al guardar. Revise su conexión.");
+        }
     }
 
     function procesarRegistroRapido() {
         const n = document.getElementById('reg-nombre').value;
         const a1 = document.getElementById('reg-ape1').value;
+        const a2 = document.getElementById('reg-ape2').value;
         const d = document.getElementById('reg-dni').value;
-        if(!n || !d) return alert("Nombre y DNI obligatorios");
+        const e = document.getElementById('reg-email').value;
+
+        if(!n || !d || !e) {
+            alert("Nombre, DNI y Email son obligatorios para registro rápido.");
+            return;
+        }
         
-        registrar(`${n} ${a1}`, d, "Rápido");
+        const nombreCompleto = `${n} ${a1} ${a2}`.trim();
+        enviarRegistro(nombreCompleto, d, "Rápido", e);
+        
+        // Limpiar campos
+        document.getElementById('reg-nombre').value = "";
+        document.getElementById('reg-dni').value = "";
+        document.getElementById('reg-email').value = "";
         showView('view-app');
     }
 
-    // --- ESCANER ---
-    let html5QrCode;
+    // --- ESCÁNER ---
     function iniciarEscaner() {
-        html5QrCode = new Html5Qrcode("reader");
+        if(!html5QrCode) html5QrCode = new Html5Qrcode("reader");
+        
         const config = { fps: 10, qrbox: { width: 250, height: 250 } };
-        html5QrCode.start({ facingMode: "environment" }, config, (decodedText) => {
-            // Lógica: El QR contiene el DNI o el CodigoValidacion
-            const encontrado = dbInscritos.find(i => i.DNI === decodedText || i.CodigoValidacion === decodedText);
-            if(encontrado) {
-                html5QrCode.stop();
-                registrar(encontrado.Nombre, encontrado.DNI, "QR");
-                setTimeout(() => iniciarEscaner(), 3000);
-            } else {
-                alert("QR no reconocido en esta actividad");
+        
+        html5QrCode.start(
+            { facingMode: "environment" }, 
+            config, 
+            (decodedText) => {
+                // Buscamos si el QR coincide con un DNI o Código de Validación
+                const encontrado = dbInscritos.find(i => 
+                    (i.DNI === decodedText || i.CodigoValidacion === decodedText) && 
+                    i.Actividad === configActual.actividad
+                );
+
+                if(encontrado) {
+                    html5QrCode.pause(true);
+                    enviarRegistro(encontrado.Nombre, encontrado.DNI, "QR");
+                    setTimeout(() => html5QrCode.resume(), 3000);
+                } else {
+                    alert("El código QR no pertenece a esta actividad o no está inscrito.");
+                }
             }
+        ).catch(err => {
+            document.getElementById('reader').innerHTML = `<p style="color:red; padding:20px;">Error: No se pudo acceder a la cámara. Verifique permisos HTTPS.</p>`;
         });
     }
 
-    // --- ADMIN ---
-    async function actualizarDashboard() {
-        const resp = await fetch(SCRIPT_URL + "?action=getStats"); // Requiere esta función en el script
-        const stats = await resp.json();
-        document.getElementById('admin-stats').innerHTML = `
-            <div class="stat-card">Inscritos<span>${stats.totalInscritos}</span></div>
-            <div class="stat-card">Asistencias<span>${stats.totalAsistencias}</span></div>
-        `;
+    // --- ESTADÍSTICAS ADMIN ---
+    async function cargarStatsAdmin() {
+        document.getElementById('admin-act-name').innerText = "Cargando...";
+        try {
+            // Aquí puedes llamar a una acción del script para obtener el resumen real
+            const resp = await fetch(SCRIPT_URL + "?action=getInscritos"); // Ejemplo simplificado
+            const data = await resp.json();
+            document.getElementById('stat-inscritos').innerText = data.length;
+            document.getElementById('admin-act-name').innerText = "General / Todas";
+        } catch(e) {}
     }
 
 </script>
