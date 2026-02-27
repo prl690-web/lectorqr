@@ -21,17 +21,16 @@
     <style>
         @keyframes slide-down { from { transform: translateY(-100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         .animate-slide-down { animation: slide-down 0.3s ease-out forwards; }
+        body { -webkit-tap-highlight-color: transparent; }
     </style>
 </head>
-<body class="bg-slate-50">
+<body class="bg-slate-50 text-slate-900">
     <div id="root"></div>
 
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
         // --- CONFIGURACIÓN DE FIREBASE ---
-        // Al subir a GitHub, estos valores deben ser los de tu proyecto de Firebase.
-        // Si usas el entorno de Canvas, se detectan automáticamente.
         const firebaseConfig = JSON.parse(window.__firebase_config || '{}');
         const appId = window.__app_id || 'qr-scanner-app';
         
@@ -84,13 +83,14 @@
                     } catch (e) { console.error("Error en Auth:", e); }
                 };
                 initAuth();
-                return auth.onAuthStateChanged(setUser);
+                const unsubscribe = auth.onAuthStateChanged(u => setUser(u));
+                return () => unsubscribe();
             }, []);
 
             useEffect(() => {
                 if (!user || !db || !sessionInfo.activity) return;
                 const path = `artifacts/${appId}/public/data/attendees`;
-                return db.collection(path)
+                const unsubscribe = db.collection(path)
                     .onSnapshot((snapshot) => {
                         const docs = snapshot.docs
                             .map(d => ({ id: d.id, ...d.data() }))
@@ -101,6 +101,7 @@
                             checkedIn: docs.filter(a => a.status === 'checked-in').length
                         });
                     }, (err) => console.error("Error Firestore:", err));
+                return () => unsubscribe();
             }, [user, sessionInfo.activity]);
 
             const showFeedback = (text, type = "success") => {
@@ -143,8 +144,8 @@
                                 <option value="Opción 2">Opción 2</option>
                             </select>
                             <input required type="password" className="w-full p-3 bg-slate-50 border rounded-xl" placeholder="Contraseña de la actividad" onChange={e => setSessionInfo({...sessionInfo, eventPassword: e.target.value})} />
-                            <button className="w-full py-4 bg-blue-600 text-white font-bold rounded-xl flex items-center justify-center gap-2 hover:bg-blue-700 transition-colors">
-                                <Icon name="shield-check" size={20} /> Entrar
+                            <button disabled={loading} className="w-full py-4 bg-blue-600 text-white font-bold rounded-xl flex items-center justify-center gap-2 hover:bg-blue-700 transition-colors disabled:opacity-50">
+                                {loading ? "Entrando..." : <><Icon name="shield-check" size={20} /> Entrar</>}
                             </button>
                         </form>
                     </div>
@@ -153,19 +154,24 @@
 
             if (view === 'verifier_menu') return (
                 <div className="min-h-screen p-4 max-w-lg mx-auto bg-slate-50">
-                    <header className="flex justify-between items-center mb-6">
+                    <header className="flex justify-between items-center mb-6 bg-white p-4 rounded-xl shadow-sm border border-slate-100">
                         <div>
-                            <h2 className="text-xl font-bold">{sessionInfo.activity}</h2>
+                            <h2 className="text-xl font-bold text-slate-800">{sessionInfo.activity}</h2>
                             <p className="text-sm text-slate-500">{sessionInfo.fullName}</p>
                         </div>
-                        <button onClick={() => setView('login')} className="p-2 text-slate-400"><Icon name="log-out" /></button>
+                        <button onClick={() => setView('login')} className="p-2 text-slate-400 hover:text-red-500"><Icon name="log-out" /></button>
                     </header>
                     <div className="grid grid-cols-1 gap-4">
-                        <button onClick={() => setView('scanner')} className="bg-white p-6 rounded-2xl shadow-sm border flex items-center gap-4 hover:bg-slate-50">
+                        <div className="bg-blue-600 p-4 rounded-xl text-white flex justify-around text-center mb-2">
+                            <div><p className="text-2xl font-bold">{stats.checkedIn}</p><p className="text-xs opacity-80">Validados</p></div>
+                            <div className="w-px bg-white/20"></div>
+                            <div><p className="text-2xl font-bold">{stats.total}</p><p className="text-xs opacity-80">Total</p></div>
+                        </div>
+                        <button onClick={() => setView('scanner')} className="bg-white p-6 rounded-2xl shadow-sm border flex items-center gap-4 hover:bg-slate-50 transition-all">
                             <div className="p-3 bg-blue-100 text-blue-600 rounded-full"><Icon name="camera" /></div>
                             <div className="text-left"><p className="font-bold">Escanear QR</p><p className="text-xs text-slate-400">Cámara del móvil</p></div>
                         </button>
-                        <button onClick={() => setView('list')} className="bg-white p-6 rounded-2xl shadow-sm border flex items-center gap-4 hover:bg-slate-50">
+                        <button onClick={() => setView('list')} className="bg-white p-6 rounded-2xl shadow-sm border flex items-center gap-4 hover:bg-slate-50 transition-all">
                             <div className="p-3 bg-green-100 text-green-600 rounded-full"><Icon name="users" /></div>
                             <div className="text-left"><p className="font-bold">Lista Manual</p><p className="text-xs text-slate-400">Buscar invitado</p></div>
                         </button>
@@ -175,12 +181,12 @@
 
             if (view === 'scanner') return (
                 <div className="fixed inset-0 bg-black z-50 flex flex-col">
-                    <div className="p-4 flex justify-between text-white bg-black">
-                        <button onClick={() => setView('verifier_menu')}><Icon name="x-circle" /></button>
-                        <span className="font-bold">Escáner Activo</span>
+                    <div className="p-4 flex justify-between text-white bg-black/50 backdrop-blur-md absolute top-0 w-full z-10">
+                        <button onClick={() => setView('verifier_menu')}><Icon name="arrow-left" /></button>
+                        <span className="font-bold">Escáner de Tickets</span>
                         <div className="w-8"></div>
                     </div>
-                    <div id="qr-reader" className="flex-1"></div>
+                    <div id="qr-reader" className="w-full h-full"></div>
                     <ScannerLogic attendees={attendees} onResult={(res) => {
                         if (res.success) {
                             db.doc(`artifacts/${appId}/public/data/attendees/${res.id}`).update({
@@ -197,18 +203,23 @@
 
             if (view === 'list') return (
                 <div className="min-h-screen p-4 bg-white max-w-lg mx-auto">
-                    <button onClick={() => setView('verifier_menu')} className="mb-4 p-2 bg-slate-100 rounded-full"><Icon name="x-circle" /></button>
+                    <div className="flex items-center gap-4 mb-6">
+                        <button onClick={() => setView('verifier_menu')} className="p-2 bg-slate-100 rounded-full"><Icon name="arrow-left" size={20} /></button>
+                        <h2 className="text-xl font-bold">Lista de Invitados</h2>
+                    </div>
                     <div className="space-y-2">
-                        {attendees.map(a => (
-                            <div key={a.id} className={`p-4 border rounded-xl flex justify-between items-center ${a.status === 'checked-in' ? 'bg-green-50 border-green-200' : ''}`}>
-                                <div><p className="font-bold">{a.name}</p><p className="text-xs text-slate-500">{a.dni}</p></div>
+                        {attendees.length === 0 ? (
+                            <p className="text-center text-slate-400 py-10 italic">No hay invitados cargados para esta actividad.</p>
+                        ) : attendees.map(a => (
+                            <div key={a.id} className={`p-4 border rounded-xl flex justify-between items-center ${a.status === 'checked-in' ? 'bg-green-50 border-green-200' : 'bg-white'}`}>
+                                <div><p className="font-bold">{a.name}</p><p className="text-xs text-slate-500 uppercase tracking-wider">{a.dni}</p></div>
                                 <button onClick={() => {
                                     const next = a.status === 'checked-in' ? 'pending' : 'checked-in';
                                     db.doc(`artifacts/${appId}/public/data/attendees/${a.id}`).update({
                                         status: next,
                                         verifier: next === 'checked-in' ? sessionInfo.fullName : null
                                     });
-                                }} className={`p-2 rounded-lg ${a.status === 'checked-in' ? 'bg-green-500 text-white' : 'bg-slate-100 text-slate-400'}`}>
+                                }} className={`p-2 rounded-lg transition-colors ${a.status === 'checked-in' ? 'bg-green-500 text-white' : 'bg-slate-100 text-slate-400'}`}>
                                     <Icon name="check-circle" size={20} />
                                 </button>
                             </div>
@@ -219,52 +230,66 @@
 
             if (view === 'admin') return (
                 <div className="min-h-screen bg-slate-50 max-w-lg mx-auto">
-                    <nav className="bg-white p-4 shadow-sm flex justify-between items-center">
-                        <h2 className="font-bold text-blue-600">MODO ADMINISTRADOR</h2>
+                    <nav className="bg-white p-4 shadow-sm flex justify-between items-center border-b">
+                        <h2 className="font-bold text-blue-600 flex items-center gap-2"><Icon name="settings" size={18}/> MODO ADMIN</h2>
                         <button onClick={() => setView('login')} className="text-slate-400"><Icon name="log-out" /></button>
                     </nav>
                     <div className="p-6 space-y-6">
                         <div className="bg-white p-6 rounded-2xl shadow-sm space-y-4 border border-slate-200">
-                            <h3 className="font-bold flex items-center gap-2"><Icon name="settings" size={18}/> Configurar Evento</h3>
-                            <input id="act-name" placeholder="Actividad (ej: Opción 1)" className="w-full p-3 border rounded-xl bg-slate-50" />
-                            <input id="act-pass" placeholder="Contraseña para ayudantes" className="w-full p-3 border rounded-xl bg-slate-50" />
-                            <textarea id="csv-data" placeholder="Pega aquí el contenido del CSV..." rows={6} className="w-full p-3 border rounded-xl text-xs font-mono bg-slate-50" />
-                            <button onClick={async () => {
+                            <h3 className="font-bold">Carga Masiva de Datos</h3>
+                            <input id="act-name" placeholder="Nombre de la Actividad (exacto)" className="w-full p-3 border rounded-xl bg-slate-50" />
+                            <input id="act-pass" placeholder="Contraseña para Verificadores" className="w-full p-3 border rounded-xl bg-slate-50" />
+                            <textarea id="csv-data" placeholder="Pega el CSV aquí (DNI,Nombre,Actividad,CodigoValidacion)" rows={6} className="w-full p-3 border rounded-xl text-xs font-mono bg-slate-50" />
+                            <button disabled={loading} onClick={async () => {
                                 const name = document.getElementById('act-name').value;
                                 const pass = document.getElementById('act-pass').value;
                                 const csv = document.getElementById('csv-data').value;
-                                if (!name || !csv) return showFeedback("Faltan datos", "error");
+                                if (!name || !csv) return showFeedback("Faltan datos obligatorios", "error");
                                 
                                 setLoading(true);
                                 try {
                                     const lines = csv.split('\n').filter(l => l.includes(','));
                                     const activitySlug = name.replace(/\s+/g, '_');
                                     await db.doc(`artifacts/${appId}/public/data/config_${activitySlug}`).set({ password: pass, activity: name });
+                                    
+                                    // Procesamiento por lotes
+                                    const batch = db.batch();
                                     for (let line of lines.slice(1)) {
-                                        const [dni, n, act, code] = line.split(',').map(s => s.trim().replace(/"/g, ''));
-                                        await db.collection(`artifacts/${appId}/public/data/attendees`).add({
+                                        const parts = line.split(',').map(s => s.trim().replace(/"/g, ''));
+                                        if (parts.length < 4) continue;
+                                        const [dni, n, act, code] = parts;
+                                        const ref = db.collection(`artifacts/${appId}/public/data/attendees`).doc();
+                                        batch.set(ref, {
                                             dni, name: n, activity: name, validationCode: code, status: 'pending'
                                         });
                                     }
-                                    showFeedback("¡Importación exitosa!");
-                                } catch(e) { showFeedback("Error en la carga", "error"); }
+                                    await batch.commit();
+                                    showFeedback("¡Importación finalizada con éxito!");
+                                    document.getElementById('csv-data').value = "";
+                                } catch(e) { 
+                                    console.error(e);
+                                    showFeedback("Error al guardar en la nube", "error"); 
+                                }
                                 setLoading(false);
-                            }} className="w-full py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors">
-                                {loading ? "Procesando..." : "Subir Lista de Invitados"}
+                            }} className="w-full py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors disabled:opacity-50">
+                                {loading ? "Procesando lote..." : "Guardar y Publicar Lista"}
                             </button>
                         </div>
-                        <div className="p-4 bg-blue-50 rounded-xl border border-blue-100 text-blue-800 text-sm">
-                            <p><strong>Info:</strong> Una vez configurado, tus ayudantes pueden entrar seleccionando la actividad y usando la contraseña que definas arriba.</p>
+                        <div className="p-4 bg-amber-50 rounded-xl border border-amber-100 text-amber-800 text-xs">
+                            <p><strong>Nota:</strong> Al importar, la contraseña se vinculará a la actividad. Asegúrate de que el nombre de la actividad coincida exactamente al entrar.</p>
                         </div>
                     </div>
                 </div>
             );
 
             return (
-                <div className="fixed top-4 left-4 right-4 z-[100]">
+                <div className="fixed top-4 left-4 right-4 z-[100] pointer-events-none">
                     {message && (
-                        <div className={`p-4 rounded-xl shadow-2xl text-white font-bold animate-slide-down ${message.type === 'error' ? 'bg-red-500' : 'bg-green-600'}`}>
-                            {message.text}
+                        <div className={`p-4 rounded-xl shadow-2xl text-white font-bold animate-slide-down pointer-events-auto ${message.type === 'error' ? 'bg-red-500' : 'bg-green-600'}`}>
+                            <div className="flex items-center gap-2">
+                                <Icon name={message.type === 'error' ? "alert-circle" : "check-circle"} size={20}/>
+                                {message.text}
+                            </div>
                         </div>
                     )}
                 </div>
@@ -274,19 +299,26 @@
         function ScannerLogic({ attendees, onResult }) {
             useEffect(() => {
                 const scanner = new Html5Qrcode("qr-reader");
-                scanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, 
+                const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+                
+                scanner.start({ facingMode: "environment" }, config, 
                 (text) => {
                     const found = attendees.find(a => a.validationCode === text);
                     if (found) {
-                        if (found.status === 'checked-in') onResult({ success: false, msg: "Ya ha sido validado" });
-                        else onResult({ success: true, id: found.id, msg: "✅ OK: " + found.name });
+                        if (found.status === 'checked-in') onResult({ success: false, msg: "Invitado ya validado anteriormente" });
+                        else onResult({ success: true, id: found.id, msg: "VÁLIDO: " + found.name });
                     } else {
-                        onResult({ success: false, msg: "Código no válido" });
+                        onResult({ success: false, msg: "QR no encontrado en la lista" });
                     }
-                    scanner.stop();
+                    scanner.stop().catch(() => {});
                 }, () => {});
-                return () => { if(scanner.isScanning) scanner.stop().catch(() => {}); };
-            }, []);
+                
+                return () => { 
+                    if(scanner.isScanning) {
+                        scanner.stop().catch(() => {});
+                    }
+                };
+            }, [attendees]);
             return null;
         }
 
