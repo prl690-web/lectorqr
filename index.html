@@ -22,6 +22,19 @@
         @keyframes slide-down { from { transform: translateY(-100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         .animate-slide-down { animation: slide-down 0.3s ease-out forwards; }
         body { -webkit-tap-highlight-color: transparent; }
+        /* Evitar que la pantalla se vea blanca antes de cargar React */
+        #root:empty {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background: #f8fafc;
+        }
+        #root:empty::after {
+            content: "Cargando aplicación...";
+            font-family: sans-serif;
+            color: #64748b;
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900">
@@ -30,17 +43,25 @@
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
-        // --- CONFIGURACIÓN DE FIREBASE ---
-        const firebaseConfig = JSON.parse(window.__firebase_config || '{}');
+        // --- MANEJO SEGURO DE CONFIGURACIÓN ---
+        let firebaseConfig = {};
+        try {
+            firebaseConfig = JSON.parse(window.__firebase_config || '{}');
+        } catch (e) {
+            console.warn("No se pudo cargar la configuración de Firebase automática.");
+        }
+
         const appId = window.__app_id || 'qr-scanner-app';
         
+        // Solo inicializar si hay una API Key válida
         if (firebaseConfig.apiKey) {
             if (!firebase.apps.length) {
                 firebase.initializeApp(firebaseConfig);
             }
         }
-        const auth = firebase.auth ? firebase.auth() : null;
-        const db = firebase.firestore ? firebase.firestore() : null;
+
+        const auth = firebase.apps.length ? firebase.auth() : null;
+        const db = firebase.apps.length ? firebase.firestore() : null;
 
         const MASTER_PASSWORD = "admin_master_123";
 
@@ -72,7 +93,11 @@
             const [message, setMessage] = useState(null);
 
             useEffect(() => {
-                if (!auth) return;
+                if (!auth) {
+                    console.error("Firebase Auth no está disponible. Verifica tu configuración.");
+                    return;
+                }
+                
                 const initAuth = async () => {
                     try {
                         if (window.__initial_auth_token) {
@@ -80,7 +105,9 @@
                         } else {
                             await auth.signInAnonymously();
                         }
-                    } catch (e) { console.error("Error en Auth:", e); }
+                    } catch (e) { 
+                        console.error("Error en Autenticación:", e); 
+                    }
                 };
                 initAuth();
                 const unsubscribe = auth.onAuthStateChanged(u => setUser(u));
@@ -100,7 +127,9 @@
                             total: docs.length,
                             checkedIn: docs.filter(a => a.status === 'checked-in').length
                         });
-                    }, (err) => console.error("Error Firestore:", err));
+                    }, (err) => {
+                        console.error("Error en tiempo real de Firestore:", err);
+                    });
                 return () => unsubscribe();
             }, [user, sessionInfo.activity]);
 
@@ -111,6 +140,10 @@
 
             const handleLogin = async (e) => {
                 e.preventDefault();
+                if (!db) {
+                    showFeedback("Error: Base de datos no configurada", "error");
+                    return;
+                }
                 setLoading(true);
                 if (sessionInfo.eventPassword === MASTER_PASSWORD) {
                     setView('admin'); setLoading(false); return;
@@ -121,11 +154,24 @@
                     if (configSnap.exists && configSnap.data().password === sessionInfo.eventPassword) {
                         setView('verifier_menu');
                     } else {
-                        showFeedback("Contraseña incorrecta", "error");
+                        showFeedback("Contraseña o actividad incorrecta", "error");
                     }
-                } catch (e) { showFeedback("Error de conexión", "error"); }
+                } catch (e) { 
+                    showFeedback("Error de conexión con el servidor", "error"); 
+                }
                 setLoading(false);
             };
+
+            // Si Firebase no cargó, mostramos un aviso claro en lugar de pantalla blanca
+            if (!firebaseConfig.apiKey && !window.__firebase_config) {
+                return (
+                    <div className="flex flex-col items-center justify-center min-h-screen p-10 text-center">
+                        <Icon name="alert-triangle" size={48} className="text-amber-500 mb-4" />
+                        <h1 className="text-xl font-bold">Falta configuración</h1>
+                        <p className="text-slate-500 mt-2">Esta aplicación requiere una configuración de base de datos activa para funcionar fuera de este entorno.</p>
+                    </div>
+                );
+            }
 
             if (view === 'login') return (
                 <div className="flex flex-col items-center justify-center min-h-screen p-6 bg-slate-50">
@@ -252,7 +298,6 @@
                                     const activitySlug = name.replace(/\s+/g, '_');
                                     await db.doc(`artifacts/${appId}/public/data/config_${activitySlug}`).set({ password: pass, activity: name });
                                     
-                                    // Procesamiento por lotes
                                     const batch = db.batch();
                                     for (let line of lines.slice(1)) {
                                         const parts = line.split(',').map(s => s.trim().replace(/"/g, ''));
@@ -274,9 +319,6 @@
                             }} className="w-full py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors disabled:opacity-50">
                                 {loading ? "Procesando lote..." : "Guardar y Publicar Lista"}
                             </button>
-                        </div>
-                        <div className="p-4 bg-amber-50 rounded-xl border border-amber-100 text-amber-800 text-xs">
-                            <p><strong>Nota:</strong> Al importar, la contraseña se vinculará a la actividad. Asegúrate de que el nombre de la actividad coincida exactamente al entrar.</p>
                         </div>
                     </div>
                 </div>
