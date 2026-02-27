@@ -30,34 +30,21 @@
         #visual-feedback h2 { font-size: 3.2rem; margin: 0; font-weight: 800; line-height: 1; }
         #visual-feedback p { font-size: 1.6rem; margin-top: 15px; font-weight: 300; }
 
-        /* --- LOGIN SCREEN NUEVO LOGO SVG --- */
+        /* --- LOGIN SCREEN --- */
         .login-screen { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--ual-blue) 0%, #0056a3 100%); padding: 20px; box-sizing: border-box; }
         .login-card { background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(10px); border-radius: 35px; padding: 45px 30px; width: 100%; max-width: 400px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); text-align: center; }
         
-        /* Contenedor del Logo QR Vectorial */
         .logo-container {
             width: 100px; height: 100px; margin: 0 auto 25px;
             position: relative; display: flex; align-items: center; justify-content: center;
             background: var(--white); border-radius: 24px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-            border: 2px solid #f1f5f9;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1); border: 2px solid #f1f5f9;
         }
 
         .scanner-svg { width: 60px; height: 60px; fill: var(--ual-blue); }
-        
-        .laser {
-            position: absolute; width: 80%; height: 3px;
-            background-color: var(--danger);
-            box-shadow: 0 0 12px var(--danger);
-            left: 10%; top: 20%;
-            border-radius: 10px;
-            animation: scanning 2.5s infinite ease-in-out;
-        }
+        .laser { position: absolute; width: 80%; height: 3px; background-color: var(--danger); box-shadow: 0 0 12px var(--danger); left: 10%; top: 20%; border-radius: 10px; animation: scanning 2.5s infinite ease-in-out; }
 
-        @keyframes scanning {
-            0%, 100% { top: 20%; opacity: 0.2; }
-            50% { top: 80%; opacity: 1; }
-        }
+        @keyframes scanning { 0%, 100% { top: 20%; opacity: 0.2; } 50% { top: 80%; opacity: 1; } }
 
         .login-card h2 { margin: 0; color: var(--ual-blue); font-weight: 800; font-size: 2rem; letter-spacing: -1px; }
         .login-card p { color: var(--text-muted); margin-bottom: 35px; font-weight: 400; font-size: 1rem; }
@@ -116,9 +103,7 @@
     <div class="login-screen">
         <div class="login-card">
             <div class="logo-container">
-                <svg class="scanner-svg" viewBox="0 0 24 24">
-                    <path d="M3,11H5V13H3V11M11,5H13V9H11V5M7,11H9V13H7V11M5,5H9V9H5V5M15,5H19V9H15V5M3,3V9H9V3H3M15,3V9H21V3H15M3,15V21H9V15H3M3,17H5V19H3V17M11,17H13V19H11V17M13,15H15V17H13V15M17,15H19V17H17V15M19,17H21V19H19V17M15,19H17V21H15V19M19,19H21V21H19V19M11,11H13V13H11V11M13,11H15V13H13V11M17,11H19V13H17V11M13,13H15V15H13V13M15,13H17V15H15V13M11,13H13V15H11V13M5,15H9V19H5V15M15,11H17V13H15V11M17,13H19V15H17V13M19,13H21V15H19V13Z" />
-                </svg>
+                <svg class="scanner-svg" viewBox="0 0 24 24"><path d="M3,11H5V13H3V11M11,5H13V9H11V5M7,11H9V13H7V11M5,5H9V9H5V5M15,5H19V9H15V5M3,3V9H9V3H3M15,3V9H21V3H15M3,15V21H9V15H3M3,17H5V19H3V17M11,17H13V19H11V17M13,15H15V17H13V15M17,15H19V17H17V15M19,17H21V19H19V17M15,19H17V21H15V19M19,19H21V21H19V19M11,11H13V13H11V11M13,11H15V13H13V11M17,11H19V13H17V11M13,13H15V15H13V13M15,13H17V15H15V13M11,13H13V15H11V13M5,15H9V19H5V15M15,11H17V13H15V11M17,13H19V15H17V13M19,13H21V15H19V13Z" /></svg>
                 <div class="laser"></div>
             </div>
             <h2>SaludUAL</h2>
@@ -137,22 +122,15 @@
         <h1 style="margin:0; font-size: 1.3rem; font-weight: 800;">Validación de Entrada</h1>
         <span id="display-actividad" style="font-weight:300; opacity:0.8; font-size:0.85rem;"></span>
     </div>
-
     <div class="container">
-        <div style="background:white; padding:10px; border-radius:28px; margin-bottom:20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
-            <div id="reader"></div>
-        </div>
-
+        <div style="background:white; padding:10px; border-radius:28px; margin-bottom:20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);"><div id="reader"></div></div>
         <div style="margin-bottom: 15px;">
             <div style="display:flex; justify-content:space-between; font-size:0.85rem; font-weight:800; color:var(--text-muted); margin-bottom:8px; padding:0 5px">
-                <span id="stat-count">0 asistentes</span>
-                <span id="stat-percent">0%</span>
+                <span id="stat-count">0 asistentes</span><span id="stat-percent">0%</span>
             </div>
             <input type="text" id="input-search" placeholder="🔍 Buscar por nombre o DNI..." onkeyup="filtrarLista()">
         </div>
-
         <div id="lista-asistentes" class="list-container"></div>
-
         <button onclick="showView('view-registro-rapido')" class="btn-outline">➕ REGISTRO MANUAL</button>
         <button onclick="location.reload()" style="background:none; border:none; color:var(--text-muted); width:100%; margin-top:25px; font-size:0.85rem">Finalizar Sesión</button>
     </div>
@@ -164,7 +142,7 @@
             <h3 style="margin-top:0; color:var(--ual-blue); font-weight:800">Nuevo Asistente</h3>
             <input type="text" id="reg-nombre" placeholder="Nombre completo" style="margin-bottom:12px">
             <input type="text" id="reg-dni" placeholder="DNI / NIE" style="margin-bottom:12px">
-            <input type="email" id="reg-email" placeholder="Correo electrónico" style="margin-bottom:12px">
+            <input type="email" id="reg-email" placeholder="Email (Obligatorio)" style="margin-bottom:12px">
             <button onclick="procesarRegistroRapido()" class="btn-primary">REGISTRAR ENTRADA</button>
             <button onclick="showView('view-app')" style="background:none; border:none; color:var(--ual-blue); width:100%; margin-top:15px; font-weight:800">Cancelar</button>
         </div>
@@ -178,7 +156,6 @@
     let configActual = { verificador: '', actividad: '' };
     let html5QrCode;
 
-    // --- CARGA ---
     window.onload = async () => {
         try {
             const resp = await fetch(SCRIPT_URL + "?action=getActividades");
@@ -201,11 +178,9 @@
         const title = document.getElementById('fb-title');
         const msg = document.getElementById('fb-name');
         fb.style.display = 'flex';
-        
         if (tipo === 'success') { fb.style.backgroundColor = 'var(--success)'; icon.innerText = '✅'; title.innerText = 'BIENVENIDO/A'; }
         else if (tipo === 'error') { fb.style.backgroundColor = 'var(--danger)'; icon.innerText = '❌'; title.innerText = 'ERROR QR'; }
         else if (tipo === 'warning') { fb.style.backgroundColor = 'var(--warning)'; icon.innerText = '⚠️'; title.innerText = 'YA REGISTRADO'; }
-
         msg.innerText = nombre;
         setTimeout(() => { fb.style.display = 'none'; if (html5QrCode && html5QrCode.getState() === 3) html5QrCode.resume(); }, 2200);
     }
@@ -226,7 +201,7 @@
     }
 
     async function cargarDatos() {
-        notify("Sincronizando base de datos...");
+        notify("Sincronizando...");
         const resp = await fetch(SCRIPT_URL + "?action=getInscritos");
         dbInscritos = await resp.json();
         showView('view-app');
@@ -236,44 +211,44 @@
     function renderLista(f = "") {
         const cont = document.getElementById('lista-asistentes');
         cont.innerHTML = "";
-        
         const deActividad = dbInscritos.filter(i => i.Actividad === configActual.actividad);
         const filtrados = deActividad.filter(i => i.Nombre.toLowerCase().includes(f.toLowerCase()) || i.DNI.includes(f));
-
         const numPresentes = deActividad.filter(i => asistenciasLocales.has(i.DNI)).length;
         document.getElementById('stat-count').innerText = `${numPresentes} de ${deActividad.length} asistentes`;
         document.getElementById('stat-percent').innerText = `${Math.round((numPresentes/deActividad.length)*100 || 0)}%`;
-
         filtrados.forEach(i => {
             const presente = asistenciasLocales.has(i.DNI);
             const card = document.createElement('div');
             card.className = `asistente-card ${presente ? 'presente' : ''}`;
-            card.innerHTML = `
-                <div class="avatar">${i.Nombre.charAt(0).toUpperCase()}</div>
+            card.innerHTML = `<div class="avatar">${i.Nombre.charAt(0).toUpperCase()}</div>
                 <div class="user-info"><b>${i.Nombre}</b><span>DNI: ${i.DNI}</span></div>
                 <button class="btn-action ${presente ? 'btn-desmarcar' : 'btn-marcar'}" onclick="gestionarAsistencia('${i.Nombre}','${i.DNI}', ${presente})">
-                    ${presente ? 'DESMARCAR' : 'MARCAR'}
-                </button>
-            `;
+                    ${presente ? 'DESMARCAR' : 'MARCAR'}</button>`;
             cont.appendChild(card);
         });
     }
 
     function filtrarLista() { renderLista(document.getElementById('input-search').value); }
 
-    async function gestionarAsistencia(nombre, dni, esAnulacion) {
-        if (esAnulacion) { asistenciasLocales.delete(dni); notify(`Se ha desmarcado a ${nombre}`, "#94a3b8"); }
-        else { asistenciasLocales.add(dni); notify(`✅ Entrada registrada: ${nombre}`); }
-        
+    async function gestionarAsistencia(nombre, dni, esAnulacion, email = "") {
+        if (esAnulacion) { asistenciasLocales.delete(dni); notify(`Desmarcado: ${nombre}`, "#94a3b8"); }
+        else { asistenciasLocales.add(dni); notify(`✅ Registrado: ${nombre}`); }
         renderLista(document.getElementById('input-search').value);
-        fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ nombre: nombre, dni: dni, actividad: configActual.actividad, verificador: configActual.verificador, tipo: esAnulacion ? "ANULACIÓN" : "MANUAL" }) });
+        fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ nombre: nombre, dni: dni, actividad: configActual.actividad, verificador: configActual.verificador, tipo: esAnulacion ? "ANULACIÓN" : "MANUAL", email: email }) });
     }
 
     function procesarRegistroRapido() {
-        const n = document.getElementById('reg-nombre').value, d = document.getElementById('reg-dni').value;
-        if(!n || !d) return notify("Nombre y DNI obligatorios", "#e74c3c");
-        gestionarAsistencia(n, d, false);
+        const n = document.getElementById('reg-nombre').value;
+        const d = document.getElementById('reg-dni').value;
+        const e = document.getElementById('reg-email').value;
+        if(!n || !d || !e) return notify("Nombre, DNI y Email son obligatorios", "#e74c3c");
+        
+        gestionarAsistencia(n, d, false, e);
         showVisualFeedback('success', '', n);
+        // Limpiar campos para el siguiente
+        document.getElementById('reg-nombre').value = "";
+        document.getElementById('reg-dni').value = "";
+        document.getElementById('reg-email').value = "";
         showView('view-app');
     }
 
@@ -285,7 +260,7 @@
             if(enc) {
                 if(!asistenciasLocales.has(enc.DNI)) { gestionarAsistencia(enc.Nombre, enc.DNI, false); showVisualFeedback('success', '', enc.Nombre); if(navigator.vibrate) navigator.vibrate(100); }
                 else { showVisualFeedback('warning', '', enc.Nombre); }
-            } else { showVisualFeedback('error', '', 'QR NO RECONOCIDO'); }
+            } else { showVisualFeedback('error', '', 'QR NO VÁLIDO'); }
         }).catch(() => {});
     }
 
@@ -294,7 +269,7 @@
         if(p === "adminUAL") {
             const resp = await fetch(SCRIPT_URL + "?action=getStats");
             const s = await resp.json();
-            alert(`Estado SaludUAL:\nInscritos: ${s.totalInscritos}\nAsistencias totales: ${s.totalAsistencias}`);
+            alert(`Resumen:\nInscritos: ${s.totalInscritos}\nAsistencias: ${s.totalAsistencias}`);
         }
     }
 </script>
