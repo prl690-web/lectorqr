@@ -4,25 +4,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Escáner de Eventos Pro</title>
-    <!-- Tailwind CSS para el diseño -->
+    
+    <!-- Scripts Base -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Firebase SDK (Versión compatible para despliegue sencillo) -->
-    <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore-compat.js"></script>
+    
+    <!-- Firebase SDK Legacy (Más compatible con scripts directos) -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    
     <!-- React y Babel -->
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <!-- Lucide Icons -->
+    
+    <!-- Iconos y QR -->
     <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- HTML5 QR Code -->
     <script src="https://unpkg.com/html5-qrcode"></script>
+
     <style>
         @keyframes slide-down { from { transform: translateY(-100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         .animate-slide-down { animation: slide-down 0.3s ease-out forwards; }
-        body { -webkit-tap-highlight-color: transparent; }
-        /* Evitar que la pantalla se vea blanca antes de cargar React */
+        body { -webkit-tap-highlight-color: transparent; font-family: sans-serif; }
+        
         #root:empty {
             display: flex;
             align-items: center;
@@ -31,33 +35,47 @@
             background: #f8fafc;
         }
         #root:empty::after {
-            content: "Cargando aplicación...";
-            font-family: sans-serif;
+            content: "Iniciando sistema...";
             color: #64748b;
+            font-weight: bold;
         }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900">
     <div id="root"></div>
 
+    <!-- Detector de errores críticos -->
+    <script>
+        window.onerror = function(msg, url, line) {
+            const root = document.getElementById('root');
+            if (root) {
+                root.innerHTML = `<div style="padding: 20px; color: red;">
+                    <h3>Error de Carga</h3>
+                    <p>${msg}</p>
+                    <small>Línea: ${line}</small>
+                </div>`;
+            }
+            return false;
+        };
+    </script>
+
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
-        // --- MANEJO SEGURO DE CONFIGURACIÓN ---
+        // Configuración segura
         let firebaseConfig = {};
         try {
-            firebaseConfig = JSON.parse(window.__firebase_config || '{}');
+            const rawConfig = window.__firebase_config;
+            firebaseConfig = rawConfig ? JSON.parse(rawConfig) : {};
         } catch (e) {
-            console.warn("No se pudo cargar la configuración de Firebase automática.");
+            console.error("Error al parsear configuración");
         }
 
-        const appId = window.__app_id || 'qr-scanner-app';
+        const appId = window.__app_id || 'default-app';
         
-        // Solo inicializar si hay una API Key válida
-        if (firebaseConfig.apiKey) {
-            if (!firebase.apps.length) {
-                firebase.initializeApp(firebaseConfig);
-            }
+        // Inicialización de Firebase
+        if (firebaseConfig.apiKey && !firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
         }
 
         const auth = firebase.apps.length ? firebase.auth() : null;
@@ -69,18 +87,10 @@
             const ref = useRef(null);
             useEffect(() => {
                 if (window.lucide) {
-                    window.lucide.createIcons({
-                        attrs: {
-                            class: className,
-                            'stroke-width': 2,
-                            width: size,
-                            height: size
-                        },
-                        nameAttr: 'data-lucide'
-                    });
+                    window.lucide.createIcons();
                 }
-            }, [name, size, className]);
-            return <i data-lucide={name} className={className} ref={ref}></i>;
+            }, [name]);
+            return <i data-lucide={name} className={className} style={{ width: size, height: size }}></i>;
         };
 
         function App() {
@@ -93,10 +103,7 @@
             const [message, setMessage] = useState(null);
 
             useEffect(() => {
-                if (!auth) {
-                    console.error("Firebase Auth no está disponible. Verifica tu configuración.");
-                    return;
-                }
+                if (!auth) return;
                 
                 const initAuth = async () => {
                     try {
@@ -105,31 +112,26 @@
                         } else {
                             await auth.signInAnonymously();
                         }
-                    } catch (e) { 
-                        console.error("Error en Autenticación:", e); 
-                    }
+                    } catch (e) { console.error("Auth error:", e); }
                 };
                 initAuth();
-                const unsubscribe = auth.onAuthStateChanged(u => setUser(u));
-                return () => unsubscribe();
+                return auth.onAuthStateChanged(u => setUser(u));
             }, []);
 
             useEffect(() => {
                 if (!user || !db || !sessionInfo.activity) return;
+                
                 const path = `artifacts/${appId}/public/data/attendees`;
                 const unsubscribe = db.collection(path)
+                    .where("activity", "==", sessionInfo.activity)
                     .onSnapshot((snapshot) => {
-                        const docs = snapshot.docs
-                            .map(d => ({ id: d.id, ...d.data() }))
-                            .filter(a => a.activity === sessionInfo.activity);
+                        const docs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
                         setAttendees(docs);
                         setStats({
                             total: docs.length,
                             checkedIn: docs.filter(a => a.status === 'checked-in').length
                         });
-                    }, (err) => {
-                        console.error("Error en tiempo real de Firestore:", err);
-                    });
+                    }, (err) => console.error(err));
                 return () => unsubscribe();
             }, [user, sessionInfo.activity]);
 
@@ -140,58 +142,51 @@
 
             const handleLogin = async (e) => {
                 e.preventDefault();
-                if (!db) {
-                    showFeedback("Error: Base de datos no configurada", "error");
-                    return;
-                }
+                if (!db) return showFeedback("Base de datos no disponible", "error");
+                
                 setLoading(true);
                 if (sessionInfo.eventPassword === MASTER_PASSWORD) {
                     setView('admin'); setLoading(false); return;
                 }
+                
                 try {
                     const activitySlug = sessionInfo.activity.replace(/\s+/g, '_');
                     const configSnap = await db.doc(`artifacts/${appId}/public/data/config_${activitySlug}`).get();
                     if (configSnap.exists && configSnap.data().password === sessionInfo.eventPassword) {
                         setView('verifier_menu');
                     } else {
-                        showFeedback("Contraseña o actividad incorrecta", "error");
+                        showFeedback("Credenciales incorrectas", "error");
                     }
-                } catch (e) { 
-                    showFeedback("Error de conexión con el servidor", "error"); 
-                }
+                } catch (e) { showFeedback("Error de conexión", "error"); }
                 setLoading(false);
             };
 
-            // Si Firebase no cargó, mostramos un aviso claro en lugar de pantalla blanca
-            if (!firebaseConfig.apiKey && !window.__firebase_config) {
+            // Pantalla de error si no hay Firebase (fuera del canvas)
+            if (!firebase.apps.length) {
                 return (
-                    <div className="flex flex-col items-center justify-center min-h-screen p-10 text-center">
-                        <Icon name="alert-triangle" size={48} className="text-amber-500 mb-4" />
-                        <h1 className="text-xl font-bold">Falta configuración</h1>
-                        <p className="text-slate-500 mt-2">Esta aplicación requiere una configuración de base de datos activa para funcionar fuera de este entorno.</p>
+                    <div className="flex flex-col items-center justify-center min-h-screen p-10 text-center bg-slate-50">
+                        <div className="bg-white p-8 rounded-2xl shadow-lg">
+                            <h1 className="text-xl font-bold text-red-600 mb-2">Error de Configuración</h1>
+                            <p className="text-slate-600 text-sm">No se ha detectado una base de datos activa. Verifica que los archivos estén en la raíz de tu proyecto.</p>
+                        </div>
                     </div>
                 );
             }
 
             if (view === 'login') return (
                 <div className="flex flex-col items-center justify-center min-h-screen p-6 bg-slate-50">
-                    <div className="w-full max-w-md p-8 bg-white rounded-2xl shadow-xl border border-slate-100">
-                        <div className="flex justify-center mb-6">
-                            <div className="p-4 bg-blue-600 rounded-full text-white shadow-lg">
-                                <Icon name="qr-code" size={40} />
-                            </div>
-                        </div>
-                        <h1 className="text-2xl font-bold text-center text-slate-800 mb-8">Acceso al Evento</h1>
+                    <div className="w-full max-w-md p-8 bg-white rounded-2xl shadow-xl">
+                        <h1 className="text-2xl font-bold text-center mb-8">Acceso Eventos</h1>
                         <form onSubmit={handleLogin} className="space-y-4">
-                            <input required className="w-full p-3 bg-slate-50 border rounded-xl" placeholder="Tu nombre" onChange={e => setSessionInfo({...sessionInfo, fullName: e.target.value})} />
-                            <select required className="w-full p-3 bg-slate-50 border rounded-xl" onChange={e => setSessionInfo({...sessionInfo, activity: e.target.value})}>
+                            <input required className="w-full p-3 border rounded-xl" placeholder="Tu nombre" onChange={e => setSessionInfo({...sessionInfo, fullName: e.target.value})} />
+                            <select required className="w-full p-3 border rounded-xl" onChange={e => setSessionInfo({...sessionInfo, activity: e.target.value})}>
                                 <option value="">Selecciona actividad...</option>
                                 <option value="Opción 1">Opción 1</option>
                                 <option value="Opción 2">Opción 2</option>
                             </select>
-                            <input required type="password" className="w-full p-3 bg-slate-50 border rounded-xl" placeholder="Contraseña de la actividad" onChange={e => setSessionInfo({...sessionInfo, eventPassword: e.target.value})} />
-                            <button disabled={loading} className="w-full py-4 bg-blue-600 text-white font-bold rounded-xl flex items-center justify-center gap-2 hover:bg-blue-700 transition-colors disabled:opacity-50">
-                                {loading ? "Entrando..." : <><Icon name="shield-check" size={20} /> Entrar</>}
+                            <input required type="password" className="w-full p-3 border rounded-xl" placeholder="Contraseña" onChange={e => setSessionInfo({...sessionInfo, eventPassword: e.target.value})} />
+                            <button disabled={loading} className="w-full py-4 bg-blue-600 text-white font-bold rounded-xl disabled:opacity-50">
+                                {loading ? "Cargando..." : "Entrar"}
                             </button>
                         </form>
                     </div>
@@ -199,27 +194,26 @@
             );
 
             if (view === 'verifier_menu') return (
-                <div className="min-h-screen p-4 max-w-lg mx-auto bg-slate-50">
-                    <header className="flex justify-between items-center mb-6 bg-white p-4 rounded-xl shadow-sm border border-slate-100">
+                <div className="min-h-screen p-4 max-w-lg mx-auto">
+                    <div className="flex justify-between items-center mb-6 bg-white p-4 rounded-xl shadow-sm">
                         <div>
-                            <h2 className="text-xl font-bold text-slate-800">{sessionInfo.activity}</h2>
-                            <p className="text-sm text-slate-500">{sessionInfo.fullName}</p>
+                            <h2 className="font-bold">{sessionInfo.activity}</h2>
+                            <p className="text-xs text-slate-500">{sessionInfo.fullName}</p>
                         </div>
-                        <button onClick={() => setView('login')} className="p-2 text-slate-400 hover:text-red-500"><Icon name="log-out" /></button>
-                    </header>
-                    <div className="grid grid-cols-1 gap-4">
-                        <div className="bg-blue-600 p-4 rounded-xl text-white flex justify-around text-center mb-2">
-                            <div><p className="text-2xl font-bold">{stats.checkedIn}</p><p className="text-xs opacity-80">Validados</p></div>
-                            <div className="w-px bg-white/20"></div>
-                            <div><p className="text-2xl font-bold">{stats.total}</p><p className="text-xs opacity-80">Total</p></div>
+                        <button onClick={() => setView('login')} className="text-red-500"><Icon name="log-out" size={20}/></button>
+                    </div>
+                    <div className="grid gap-4">
+                        <div className="bg-blue-600 p-4 rounded-xl text-white flex justify-around">
+                            <div className="text-center"><p className="text-xl font-bold">{stats.checkedIn}</p><p className="text-[10px]">LISTOS</p></div>
+                            <div className="text-center"><p className="text-xl font-bold">{stats.total}</p><p className="text-[10px]">TOTAL</p></div>
                         </div>
-                        <button onClick={() => setView('scanner')} className="bg-white p-6 rounded-2xl shadow-sm border flex items-center gap-4 hover:bg-slate-50 transition-all">
-                            <div className="p-3 bg-blue-100 text-blue-600 rounded-full"><Icon name="camera" /></div>
-                            <div className="text-left"><p className="font-bold">Escanear QR</p><p className="text-xs text-slate-400">Cámara del móvil</p></div>
+                        <button onClick={() => setView('scanner')} className="bg-white p-6 rounded-2xl shadow-sm border flex items-center gap-4">
+                            <Icon name="camera" className="text-blue-600" />
+                            <span className="font-bold">Escanear Ticket</span>
                         </button>
-                        <button onClick={() => setView('list')} className="bg-white p-6 rounded-2xl shadow-sm border flex items-center gap-4 hover:bg-slate-50 transition-all">
-                            <div className="p-3 bg-green-100 text-green-600 rounded-full"><Icon name="users" /></div>
-                            <div className="text-left"><p className="font-bold">Lista Manual</p><p className="text-xs text-slate-400">Buscar invitado</p></div>
+                        <button onClick={() => setView('list')} className="bg-white p-6 rounded-2xl shadow-sm border flex items-center gap-4">
+                            <Icon name="users" className="text-green-600" />
+                            <span className="font-bold">Lista Manual</span>
                         </button>
                     </div>
                 </div>
@@ -227,12 +221,8 @@
 
             if (view === 'scanner') return (
                 <div className="fixed inset-0 bg-black z-50 flex flex-col">
-                    <div className="p-4 flex justify-between text-white bg-black/50 backdrop-blur-md absolute top-0 w-full z-10">
-                        <button onClick={() => setView('verifier_menu')}><Icon name="arrow-left" /></button>
-                        <span className="font-bold">Escáner de Tickets</span>
-                        <div className="w-8"></div>
-                    </div>
                     <div id="qr-reader" className="w-full h-full"></div>
+                    <button onClick={() => setView('verifier_menu')} className="absolute top-4 left-4 bg-white/20 p-2 rounded-full text-white"><Icon name="arrow-left"/></button>
                     <ScannerLogic attendees={attendees} onResult={(res) => {
                         if (res.success) {
                             db.doc(`artifacts/${appId}/public/data/attendees/${res.id}`).update({
@@ -248,25 +238,22 @@
             );
 
             if (view === 'list') return (
-                <div className="min-h-screen p-4 bg-white max-w-lg mx-auto">
+                <div className="min-h-screen p-4 bg-white">
                     <div className="flex items-center gap-4 mb-6">
-                        <button onClick={() => setView('verifier_menu')} className="p-2 bg-slate-100 rounded-full"><Icon name="arrow-left" size={20} /></button>
-                        <h2 className="text-xl font-bold">Lista de Invitados</h2>
+                        <button onClick={() => setView('verifier_menu')}><Icon name="arrow-left" /></button>
+                        <h2 className="font-bold">Lista Invitados</h2>
                     </div>
                     <div className="space-y-2">
-                        {attendees.length === 0 ? (
-                            <p className="text-center text-slate-400 py-10 italic">No hay invitados cargados para esta actividad.</p>
-                        ) : attendees.map(a => (
-                            <div key={a.id} className={`p-4 border rounded-xl flex justify-between items-center ${a.status === 'checked-in' ? 'bg-green-50 border-green-200' : 'bg-white'}`}>
-                                <div><p className="font-bold">{a.name}</p><p className="text-xs text-slate-500 uppercase tracking-wider">{a.dni}</p></div>
+                        {attendees.map(a => (
+                            <div key={a.id} className="p-3 border rounded-lg flex justify-between items-center">
+                                <div><p className="font-bold text-sm">{a.name}</p><p className="text-[10px] text-slate-400">{a.dni}</p></div>
                                 <button onClick={() => {
-                                    const next = a.status === 'checked-in' ? 'pending' : 'checked-in';
                                     db.doc(`artifacts/${appId}/public/data/attendees/${a.id}`).update({
-                                        status: next,
-                                        verifier: next === 'checked-in' ? sessionInfo.fullName : null
+                                        status: a.status === 'checked-in' ? 'pending' : 'checked-in',
+                                        verifier: a.status === 'checked-in' ? null : sessionInfo.fullName
                                     });
-                                }} className={`p-2 rounded-lg transition-colors ${a.status === 'checked-in' ? 'bg-green-500 text-white' : 'bg-slate-100 text-slate-400'}`}>
-                                    <Icon name="check-circle" size={20} />
+                                }} className={`p-2 rounded ${a.status === 'checked-in' ? 'bg-green-500 text-white' : 'bg-slate-100'}`}>
+                                    <Icon name="check" size={16} />
                                 </button>
                             </div>
                         ))}
@@ -275,51 +262,38 @@
             );
 
             if (view === 'admin') return (
-                <div className="min-h-screen bg-slate-50 max-w-lg mx-auto">
-                    <nav className="bg-white p-4 shadow-sm flex justify-between items-center border-b">
-                        <h2 className="font-bold text-blue-600 flex items-center gap-2"><Icon name="settings" size={18}/> MODO ADMIN</h2>
-                        <button onClick={() => setView('login')} className="text-slate-400"><Icon name="log-out" /></button>
-                    </nav>
-                    <div className="p-6 space-y-6">
-                        <div className="bg-white p-6 rounded-2xl shadow-sm space-y-4 border border-slate-200">
-                            <h3 className="font-bold">Carga Masiva de Datos</h3>
-                            <input id="act-name" placeholder="Nombre de la Actividad (exacto)" className="w-full p-3 border rounded-xl bg-slate-50" />
-                            <input id="act-pass" placeholder="Contraseña para Verificadores" className="w-full p-3 border rounded-xl bg-slate-50" />
-                            <textarea id="csv-data" placeholder="Pega el CSV aquí (DNI,Nombre,Actividad,CodigoValidacion)" rows={6} className="w-full p-3 border rounded-xl text-xs font-mono bg-slate-50" />
-                            <button disabled={loading} onClick={async () => {
-                                const name = document.getElementById('act-name').value;
-                                const pass = document.getElementById('act-pass').value;
-                                const csv = document.getElementById('csv-data').value;
-                                if (!name || !csv) return showFeedback("Faltan datos obligatorios", "error");
+                <div className="p-6 max-w-lg mx-auto">
+                    <div className="flex justify-between mb-6">
+                        <h2 className="font-bold">Panel Admin</h2>
+                        <button onClick={() => setView('login')} className="text-slate-400">Salir</button>
+                    </div>
+                    <div className="bg-white p-6 rounded-xl shadow-sm space-y-4">
+                        <input id="act-name" placeholder="Nombre Actividad" className="w-full p-2 border rounded" />
+                        <input id="act-pass" placeholder="Password Verificador" className="w-full p-2 border rounded" />
+                        <textarea id="csv-data" placeholder="DNI,Nombre,Actividad,CodigoValidacion" rows={5} className="w-full p-2 border rounded text-xs" />
+                        <button onClick={async () => {
+                            const name = document.getElementById('act-name').value;
+                            const pass = document.getElementById('act-pass').value;
+                            const csv = document.getElementById('csv-data').value;
+                            if (!name || !csv) return showFeedback("Faltan datos", "error");
+                            
+                            setLoading(true);
+                            try {
+                                const activitySlug = name.replace(/\s+/g, '_');
+                                await db.doc(`artifacts/${appId}/public/data/config_${activitySlug}`).set({ password: pass, activity: name });
                                 
-                                setLoading(true);
-                                try {
-                                    const lines = csv.split('\n').filter(l => l.includes(','));
-                                    const activitySlug = name.replace(/\s+/g, '_');
-                                    await db.doc(`artifacts/${appId}/public/data/config_${activitySlug}`).set({ password: pass, activity: name });
-                                    
-                                    const batch = db.batch();
-                                    for (let line of lines.slice(1)) {
-                                        const parts = line.split(',').map(s => s.trim().replace(/"/g, ''));
-                                        if (parts.length < 4) continue;
-                                        const [dni, n, act, code] = parts;
-                                        const ref = db.collection(`artifacts/${appId}/public/data/attendees`).doc();
-                                        batch.set(ref, {
-                                            dni, name: n, activity: name, validationCode: code, status: 'pending'
-                                        });
-                                    }
-                                    await batch.commit();
-                                    showFeedback("¡Importación finalizada con éxito!");
-                                    document.getElementById('csv-data').value = "";
-                                } catch(e) { 
-                                    console.error(e);
-                                    showFeedback("Error al guardar en la nube", "error"); 
-                                }
-                                setLoading(false);
-                            }} className="w-full py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors disabled:opacity-50">
-                                {loading ? "Procesando lote..." : "Guardar y Publicar Lista"}
-                            </button>
-                        </div>
+                                const lines = csv.split('\n').filter(l => l.includes(','));
+                                const batch = db.batch();
+                                lines.slice(1).forEach(line => {
+                                    const [dni, n, act, code] = line.split(',').map(s => s.trim().replace(/"/g, ''));
+                                    const ref = db.collection(`artifacts/${appId}/public/data/attendees`).doc();
+                                    batch.set(ref, { dni, name: n, activity: name, validationCode: code, status: 'pending' });
+                                });
+                                await batch.commit();
+                                showFeedback("Importación exitosa");
+                            } catch(e) { showFeedback("Error de red", "error"); }
+                            setLoading(false);
+                        }} className="w-full bg-black text-white p-3 rounded-lg font-bold">Importar Datos</button>
                     </div>
                 </div>
             );
@@ -327,11 +301,8 @@
             return (
                 <div className="fixed top-4 left-4 right-4 z-[100] pointer-events-none">
                     {message && (
-                        <div className={`p-4 rounded-xl shadow-2xl text-white font-bold animate-slide-down pointer-events-auto ${message.type === 'error' ? 'bg-red-500' : 'bg-green-600'}`}>
-                            <div className="flex items-center gap-2">
-                                <Icon name={message.type === 'error' ? "alert-circle" : "check-circle"} size={20}/>
-                                {message.text}
-                            </div>
+                        <div className={`p-4 rounded-xl shadow-lg text-white font-bold animate-slide-down pointer-events-auto ${message.type === 'error' ? 'bg-red-500' : 'bg-green-600'}`}>
+                            {message.text}
                         </div>
                     )}
                 </div>
@@ -341,25 +312,16 @@
         function ScannerLogic({ attendees, onResult }) {
             useEffect(() => {
                 const scanner = new Html5Qrcode("qr-reader");
-                const config = { fps: 10, qrbox: { width: 250, height: 250 } };
-                
-                scanner.start({ facingMode: "environment" }, config, 
+                scanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, 
                 (text) => {
                     const found = attendees.find(a => a.validationCode === text);
                     if (found) {
-                        if (found.status === 'checked-in') onResult({ success: false, msg: "Invitado ya validado anteriormente" });
-                        else onResult({ success: true, id: found.id, msg: "VÁLIDO: " + found.name });
-                    } else {
-                        onResult({ success: false, msg: "QR no encontrado en la lista" });
-                    }
+                        if (found.status === 'checked-in') onResult({ success: false, msg: "Ya validado" });
+                        else onResult({ success: true, id: found.id, msg: found.name });
+                    } else onResult({ success: false, msg: "No encontrado" });
                     scanner.stop().catch(() => {});
                 }, () => {});
-                
-                return () => { 
-                    if(scanner.isScanning) {
-                        scanner.stop().catch(() => {});
-                    }
-                };
+                return () => { if(scanner.isScanning) scanner.stop().catch(() => {}); };
             }, [attendees]);
             return null;
         }
