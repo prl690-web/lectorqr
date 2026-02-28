@@ -12,44 +12,29 @@
             --danger: #e74c3c; --warning: #f1c40f; --bg: #f8fafc;
             --white: #ffffff; --text-main: #1e293b; --text-muted: #64748b;
         }
-
         body { font-family: 'Catamaran', sans-serif; background-color: var(--bg); margin: 0; color: var(--text-main); }
-
-        /* --- ESTADO OFFLINE --- */
         #offline-alert { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: var(--danger); color: white; padding: 10px 20px; border-radius: 50px; font-weight: 800; font-size: 0.8rem; z-index: 10000; display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
-
-        /* --- LOGIN --- */
         .login-screen { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--ual-blue) 0%, #0056a3 100%); padding: 20px; }
         .login-card { background: rgba(255, 255, 255, 0.98); border-radius: 35px; padding: 45px 30px; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 25px 50px rgba(0,0,0,0.3); }
-
-        /* --- APP INTERFACE --- */
         .app-header { background: var(--ual-blue); color: white; padding: 20px; text-align: center; border-radius: 0 0 25px 25px; position: sticky; top: 0; z-index: 100; }
         .container { max-width: 500px; margin: 0 auto; padding: 15px; }
-        
-        /* FILTROS INTEGRADOS */
-        .filter-group { display: flex; gap: 5px; margin-bottom: 15px; overflow-x: auto; }
-        .filter-btn { padding: 6px 12px; border-radius: 15px; border: 1px solid #e2e8f0; background: white; font-size: 0.75rem; font-weight: 800; cursor: pointer; color: var(--text-muted); white-space: nowrap; }
+        .filter-group { display: flex; gap: 5px; margin-bottom: 15px; overflow-x: auto; padding: 5px 0; }
+        .filter-btn { padding: 8px 15px; border-radius: 15px; border: 1px solid #e2e8f0; background: white; font-size: 0.75rem; font-weight: 800; cursor: pointer; color: var(--text-muted); white-space: nowrap; transition: 0.2s; }
         .filter-btn.active { background: var(--ual-blue); color: white; border-color: var(--ual-blue); }
-
-        /* LISTA (TU DISEÑO ORIGINAL) */
         .asistente-card { background: var(--white); border-radius: 20px; padding: 16px; display: flex; align-items: center; gap: 15px; margin-bottom: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #f1f5f9; }
-        .asistente-card.presente { background: #f0fff4; border-color: #c6f6d5; }
+        .asistente-card.presente { background: #f0fff4; border-color: #c6f6d5; border-left: 4px solid var(--success); }
         .avatar { width: 48px; height: 48px; border-radius: 16px; background: #e2e8f0; color: var(--ual-blue); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.2rem; flex-shrink: 0; }
         .presente .avatar { background: var(--success); color: white; }
-
-        /* ADMIN DASHBOARD (TU ESTILO) */
         .admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
         .stat-card { background: white; padding: 15px; border-radius: 20px; text-align: center; border: 1px solid #f1f5f9; }
         .stat-card b { font-size: 1.4rem; color: var(--ual-blue); display: block; }
         .stat-card span { font-size: 0.7rem; color: var(--text-muted); font-weight: 800; text-transform: uppercase; }
-
-        input, select, button { width: 100%; padding: 16px; border-radius: 16px; border: 2px solid #e2e8f0; font-family: inherit; font-size: 1rem; box-sizing: border-box; }
+        input, select, button { width: 100%; padding: 16px; border-radius: 16px; border: 2px solid #e2e8f0; font-family: inherit; font-size: 1rem; box-sizing: border-box; outline: none; }
         .btn-primary { background: var(--ual-blue); color: white; font-weight: 800; border: none; margin-top: 15px; cursor: pointer; }
         .btn-outline { background: white; color: var(--ual-blue); border: 2px solid var(--ual-blue); font-weight: 800; margin-top: 15px; cursor: pointer; }
-
-        #reader { border-radius: 24px; overflow: hidden; border: 3px solid var(--ual-blue) !important; margin-bottom: 20px; }
+        #reader { border-radius: 24px; overflow: hidden; border: 3px solid var(--ual-blue) !important; margin-bottom: 20px; background: #000; }
         .view { display: none; } .view.active { display: block; }
-        #toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); padding: 14px 28px; border-radius: 50px; color: white; z-index: 9999; display: none; font-weight: 600; box-shadow: 0 10px 15px rgba(0,0,0,0.1); }
+        #toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); padding: 14px 28px; border-radius: 50px; color: white; z-index: 9999; display: none; font-weight: 600; box-shadow: 0 10px 15px rgba(0,0,0,0.1); text-align: center; min-width: 200px; }
     </style>
 </head>
 <body>
@@ -60,14 +45,33 @@
 <div id="view-login" class="view active">
     <div class="login-screen">
         <div class="login-card">
-            <h2 style="color:var(--ual-blue); margin-top:0;">SaludUAL</h2>
-            <p style="color:var(--text-muted); margin-bottom:25px;">Control de Asistencia</p>
-            <input type="text" id="verificador-name" placeholder="Nombre Verificador" style="margin-bottom:12px">
+            <h2 style="color:var(--ual-blue); margin:0;">SaludUAL</h2>
+            <p style="color:var(--text-muted); margin-bottom:25px;">Control de Acceso</p>
+            <input type="text" id="verificador-name" placeholder="Tu nombre" style="margin-bottom:12px">
             <select id="actividad-select" style="margin-bottom:12px"><option value="">Cargando actividades...</option></select>
             <input type="password" id="login-pass" placeholder="Contraseña">
-            <button onclick="intentarLogin()" class="btn-primary">ACCEDER AL LECTOR</button>
+            <button onclick="intentarLogin()" id="btn-entrar" class="btn-primary">ENTRAR</button>
             <button onclick="accesoAdmin()" style="background:none; border:none; color:var(--text-muted); margin-top:20px; cursor:pointer; font-size:0.85rem">Panel Administración</button>
         </div>
+    </div>
+</div>
+
+<div id="view-app" class="view">
+    <div class="app-header">
+        <h1 id="display-actividad" style="margin:0; font-size: 1.1rem;"></h1>
+        <small id="sync-status" style="opacity:0.8">Conectado</small>
+    </div>
+    <div class="container">
+        <div id="reader"></div>
+        <div class="filter-group">
+            <button class="filter-btn active" onclick="setFilter('todos', this)">TODOS</button>
+            <button class="filter-btn" onclick="setFilter('pendientes', this)">PENDIENTES</button>
+            <button class="filter-btn" onclick="setFilter('presentes', this)">PRESENTES</button>
+        </div>
+        <input type="text" id="input-search" placeholder="🔍 Buscar por nombre o DNI..." onkeyup="renderLista()" style="margin-bottom:15px">
+        <div id="lista-asistentes"></div>
+        <button onclick="showView('view-registro-rapido')" class="btn-outline">➕ REGISTRO RÁPIDO</button>
+        <button onclick="location.reload()" style="background:none; border:none; color:var(--text-muted); width:100%; margin-top:20px; cursor:pointer">Cerrar Sesión</button>
     </div>
 </div>
 
@@ -84,75 +88,58 @@
     </div>
 </div>
 
-<div id="view-app" class="view">
-    <div class="app-header">
-        <h1 id="display-actividad" style="margin:0; font-size: 1.2rem;"></h1>
-        <small id="sync-status" style="opacity:0.7">Sincronizado con Sheets</small>
-    </div>
-    <div class="container">
-        <div id="reader"></div>
-        
-        <div class="filter-group">
-            <button class="filter-btn active" onclick="setFilter('todos', this)">TODOS</button>
-            <button class="filter-btn" onclick="setFilter('pendientes', this)">PENDIENTES</button>
-            <button class="filter-btn" onclick="setFilter('presentes', this)">PRESENTES</button>
-        </div>
-
-        <input type="text" id="input-search" placeholder="🔍 Buscar por nombre o DNI..." onkeyup="renderLista()" style="margin-bottom:15px">
-        <div id="lista-asistentes"></div>
-        
-        <button onclick="showView('view-registro-rapido')" class="btn-outline">➕ REGISTRO RÁPIDO</button>
-        <button onclick="location.reload()" style="background:none; border:none; color:var(--text-muted); width:100%; margin-top:20px;">Cerrar Sesión</button>
-    </div>
-</div>
-
 <div id="view-registro-rapido" class="view">
     <div class="container" style="margin-top: 30px;">
         <div class="login-card" style="max-width:none">
-            <h3 style="color:var(--ual-blue); margin-top:0">Nuevo Asistente</h3>
+            <h3 style="color:var(--ual-blue); margin-top:0">Registro Manual</h3>
             <input type="text" id="reg-nombre" placeholder="Nombre completo" style="margin-bottom:12px">
             <input type="text" id="reg-dni" placeholder="DNI / NIE" style="margin-bottom:12px">
             <input type="email" id="reg-email" placeholder="Email" style="margin-bottom:12px">
-            <button onclick="procesarRegistroRapido()" class="btn-primary">REGISTRAR ENTRADA</button>
-            <button onclick="showView('view-app')" style="background:none; border:none; color:var(--ual-blue); margin-top:10px; font-weight:800; cursor:pointer">Cancelar</button>
+            <button onclick="procesarRegistroRapido()" class="btn-primary">CONFIRMAR REGISTRO</button>
+            <button onclick="showView('view-app')" style="background:none; border:none; color:var(--ual-blue); margin-top:10px; font-weight:800; cursor:pointer">Volver</button>
         </div>
     </div>
 </div>
 
 <script>
+    // URL DE TU SCRIPT (Asegúrate de que termina en /exec)
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxGksUqmtIctGGBadw7hNwS5fXMOuG4IA9m1rmz8lHBAnUbKiqR3hwthJeMsdXdCw2krg/exec';
+    
+    // Variables globales
     let dbInscritos = [];
     let asistenciasLocales = new Set();
     let colaOffline = JSON.parse(localStorage.getItem('colaSaludUAL') || '[]');
     let currentFilter = 'todos';
-    let configActual = { verificador: '', actividad: '' };
+    let configActual = { verificador: '', actividad: '' }; // Declarada correctamente
     let html5QrCode;
 
-    // --- SINCRONIZACIÓN Y OFFLINE ---
+    // Control de red
     window.addEventListener('online', procesarCola);
     window.addEventListener('offline', () => document.getElementById('offline-alert').style.display = 'block');
 
     async function procesarCola() {
         document.getElementById('offline-alert').style.display = 'none';
         if(colaOffline.length === 0) return;
-        document.getElementById('sync-status').innerText = "Enviando datos pendientes...";
-        for (let data of [...colaOffline]) {
+        for (let i = 0; i < colaOffline.length; i++) {
             try {
-                await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) });
-                colaOffline.shift();
+                await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(colaOffline[i]) });
+                colaOffline.splice(i, 1);
                 localStorage.setItem('colaSaludUAL', JSON.stringify(colaOffline));
+                i--;
             } catch(e) { break; }
         }
-        document.getElementById('sync-status').innerText = "Sincronizado con Sheets";
     }
 
-    // --- FUNCIONES CORE ---
-    function setFilter(f, btn) {
-        currentFilter = f;
-        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        renderLista();
-    }
+    // Inicialización
+    window.onload = async () => {
+        try {
+            const resp = await fetch(SCRIPT_URL + "?action=getActividades");
+            const acts = await resp.json();
+            const sel = document.getElementById('actividad-select');
+            sel.innerHTML = '<option value="">Selecciona actividad...</option>';
+            acts.forEach(a => sel.innerHTML += `<option value="${a}">${a}</option>`);
+        } catch(e) { notify("Error cargando actividades", "var(--danger)"); }
+    };
 
     function notify(msg, color = 'var(--ual-blue)') {
         const t = document.getElementById('toast');
@@ -160,27 +147,54 @@
         setTimeout(() => t.style.display = 'none', 3000);
     }
 
+    function showView(id) {
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        if(id === 'view-app') iniciarEscaner();
+    }
+
+    function setFilter(f, btn) {
+        currentFilter = f;
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderLista();
+    }
+
     async function intentarLogin() {
         const pass = document.getElementById('login-pass').value;
         const v = document.getElementById('verificador-name').value;
         const a = document.getElementById('actividad-select').value;
-        if(!v || !a) return notify("Faltan datos", "var(--danger)");
+        const btn = document.getElementById('btn-entrar');
 
-        const resp = await fetch(`${SCRIPT_URL}?action=checkPass&type=escaneador&pass=${encodeURIComponent(pass)}`);
-        const res = await resp.json();
-        if(res.valid) {
-            configActual = { verificador: v, actividad: a };
-            document.getElementById('display-actividad').innerText = a;
-            cargarDatos();
-        } else notify("Contraseña incorrecta", "var(--danger)");
+        if(!v || !a || !pass) return notify("Completa todos los campos", "var(--danger)");
+        
+        btn.innerText = "VERIFICANDO...";
+        btn.disabled = true;
+
+        try {
+            const resp = await fetch(`${SCRIPT_URL}?action=checkPass&type=escaneador&pass=${encodeURIComponent(pass)}`);
+            const res = await resp.json();
+            if(res.valid) {
+                configActual = { verificador: v, actividad: a };
+                document.getElementById('display-actividad').innerText = a;
+                await cargarDatos();
+            } else {
+                notify("Contraseña incorrecta", "var(--danger)");
+                btn.disabled = false; btn.innerText = "ENTRAR";
+            }
+        } catch(e) {
+            notify("Error de conexión con el servidor", "var(--danger)");
+            btn.disabled = false; btn.innerText = "ENTRAR";
+        }
     }
 
     async function cargarDatos() {
-        notify("Cargando lista...");
-        const resp = await fetch(SCRIPT_URL + "?action=getInscritos");
-        dbInscritos = await resp.json();
-        showView('view-app');
-        renderLista();
+        try {
+            const resp = await fetch(SCRIPT_URL + "?action=getInscritos");
+            dbInscritos = await resp.json();
+            showView('view-app');
+            renderLista();
+        } catch(e) { notify("Error al bajar lista", "var(--danger)"); }
     }
 
     function renderLista() {
@@ -202,13 +216,15 @@
             card.className = `asistente-card ${pres ? 'presente' : ''}`;
             card.innerHTML = `
                 <div class="avatar">${pres ? '✓' : i.Nombre.charAt(0).toUpperCase()}</div>
-                <div style="flex-grow:1"><b>${i.Nombre}</b><br><small>${i.DNI}</small></div>
-                <button onclick="gestionarAsistencia('${i.Nombre}','${i.DNI}', ${pres})" class="filter-btn ${pres ? 'active' : ''}" style="width:auto; padding:8px 15px">
+                <div style="flex-grow:1"><b>${i.Nombre}</b><br><small>DNI: ${i.DNI}</small></div>
+                <button onclick="marcarManual('${i.Nombre}','${i.DNI}', ${pres})" class="filter-btn ${pres ? 'active' : ''}" style="width:auto">
                     ${pres ? 'ANULAR' : 'MARCAR'}
                 </button>`;
             cont.appendChild(card);
         });
     }
+
+    function marcarManual(nombre, dni, pres) { gestionarAsistencia(nombre, dni, pres); }
 
     async function gestionarAsistencia(nombre, dni, esAnulacion, email = "", tipo = "MANUAL") {
         if(esAnulacion) asistenciasLocales.delete(dni);
@@ -228,33 +244,27 @@
 
     function procesarRegistroRapido() {
         const n = document.getElementById('reg-nombre').value, d = document.getElementById('reg-dni').value, e = document.getElementById('reg-email').value;
-        if(!n || !d || !e) return notify("DNI, Nombre y Email obligatorios", "var(--danger)");
-        
+        if(!n || !d || !e) return notify("Todos los campos son obligatorios", "var(--danger)");
         dbInscritos.unshift({ Nombre: n, DNI: d, Actividad: configActual.actividad });
         gestionarAsistencia(n, d, false, e, "Rápido");
-        notify("⚡ Añadido a la lista");
         showView('view-app');
     }
 
-    function showView(id) {
-        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-        if(id === 'view-app') iniciarEscaner();
-    }
-
     async function accesoAdmin() {
-        const pass = prompt("Clave Admin:");
+        const pass = prompt("Clave de Administrador:");
         if(!pass) return;
-        const resp = await fetch(`${SCRIPT_URL}?action=checkPass&type=admin&pass=${encodeURIComponent(pass)}`);
-        const res = await resp.json();
-        if(res.valid) {
-            const s = await (await fetch(SCRIPT_URL + "?action=getStats")).json();
-            document.getElementById('adm-inscritos').innerText = s.totalInscritos;
-            document.getElementById('adm-registrados').innerText = s.totalAsistencias;
-            document.getElementById('adm-pendientes').innerText = s.totalInscritos - s.totalAsistencias;
-            document.getElementById('adm-rapido').innerText = s.registrosRapidos;
-            showView('view-admin');
-        }
+        try {
+            const resp = await fetch(`${SCRIPT_URL}?action=checkPass&type=admin&pass=${encodeURIComponent(pass)}`);
+            const res = await resp.json();
+            if(res.valid) {
+                const s = await (await fetch(SCRIPT_URL + "?action=getStats")).json();
+                document.getElementById('adm-inscritos').innerText = s.totalInscritos;
+                document.getElementById('adm-registrados').innerText = s.totalAsistencias;
+                document.getElementById('adm-pendientes').innerText = s.totalInscritos - s.totalAsistencias;
+                document.getElementById('adm-rapido').innerText = s.registrosRapidos;
+                showView('view-admin');
+            } else alert("Clave incorrecta");
+        } catch(e) { alert("Error conectando con servidor admin"); }
     }
 
     function iniciarEscaner() {
@@ -263,7 +273,7 @@
             const enc = dbInscritos.find(i => (i.DNI === text || i.CodigoValidacion === text) && i.Actividad === configActual.actividad);
             if(enc && !asistenciasLocales.has(enc.DNI)) {
                 gestionarAsistencia(enc.Nombre, enc.DNI, false);
-                notify("✅ " + enc.Nombre);
+                notify("✅ Registrado: " + enc.Nombre);
                 if(navigator.vibrate) navigator.vibrate(100);
             }
         }).catch(()=>{});
