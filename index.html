@@ -13,76 +13,83 @@
             --success: #2ecc71;
             --danger: #e74c3c;
             --warning: #f1c40f;
-            --info: #3498db;
             --bg: #f8fafc;
             --white: #ffffff;
             --text-main: #1e293b;
             --text-muted: #64748b;
         }
 
-        body { font-family: 'Catamaran', sans-serif; background-color: var(--bg); margin: 0; color: var(--text-main); }
+        body { font-family: 'Catamaran', sans-serif; background-color: var(--bg); margin: 0; color: var(--text-main); overflow-x: hidden; }
 
         /* --- INDICADOR OFFLINE --- */
         #offline-indicator {
             position: fixed; top: 10px; right: 10px; background: var(--danger);
             color: white; padding: 5px 12px; border-radius: 20px; font-size: 0.7rem;
-            font-weight: 800; z-index: 10001; display: none;
+            font-weight: 800; z-index: 10001; display: none; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
 
-        /* --- APP INTERFACE --- */
-        .app-header { background: var(--ual-blue); color: white; padding: 20px; text-align: center; border-radius: 0 0 25px 25px; position: sticky; top: 0; z-index: 100; }
+        /* --- LOGIN --- */
+        .login-screen { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--ual-blue) 0%, #0056a3 100%); padding: 20px; box-sizing: border-box; }
+        .login-card { background: rgba(255, 255, 255, 0.98); border-radius: 35px; padding: 40px 30px; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 25px 50px rgba(0,0,0,0.3); }
+
+        /* --- APP HEADER --- */
+        .app-header { background: var(--ual-blue); color: white; padding: 20px; text-align: center; border-radius: 0 0 25px 25px; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         .container { max-width: 500px; margin: 0 auto; padding: 15px; }
-        
-        /* BARRA DE FILTROS OPTIMIZADA */
-        .filter-bar { display: flex; gap: 8px; margin-bottom: 15px; overflow-x: auto; padding: 5px 0; -webkit-overflow-scrolling: touch; }
-        .chip { padding: 8px 14px; border-radius: 20px; background: var(--white); border: 1px solid #e2e8f0; font-size: 0.75rem; cursor: pointer; white-space: nowrap; color: var(--text-muted); font-weight: 800; transition: 0.2s; }
+
+        /* --- FILTROS (CHIPS) --- */
+        .filter-bar { display: flex; gap: 8px; margin-bottom: 15px; overflow-x: auto; padding: 5px 0; scrollbar-width: none; }
+        .filter-bar::-webkit-scrollbar { display: none; }
+        .chip { padding: 8px 16px; border-radius: 20px; background: var(--white); border: 1px solid #e2e8f0; font-size: 0.75rem; cursor: pointer; white-space: nowrap; color: var(--text-muted); font-weight: 800; transition: 0.3s; }
         .chip.active { background: var(--ual-blue); color: white; border-color: var(--ual-blue); }
 
-        .asistente-card { background: var(--white); border-radius: 20px; padding: 16px; display: flex; align-items: center; gap: 15px; margin-bottom: 12px; border: 1px solid #f1f5f9; transition: 0.3s; }
+        /* --- LISTADO (TU DISEÑO) --- */
+        .asistente-card { background: var(--white); border-radius: 20px; padding: 16px; display: flex; align-items: center; gap: 15px; margin-bottom: 12px; border: 1px solid #f1f5f9; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
         .asistente-card.presente { background: #f0fff4; border-color: #c6f6d5; border-left: 5px solid var(--success); }
-        .avatar { width: 48px; height: 48px; border-radius: 14px; background: #e2e8f0; color: var(--ual-blue); display: flex; align-items: center; justify-content: center; font-weight: 800; flex-shrink: 0; }
+        .avatar { width: 48px; height: 48px; border-radius: 50%; background: #e2e8f0; color: var(--ual-blue); display: flex; align-items: center; justify-content: center; font-weight: 800; flex-shrink: 0; font-size: 1.1rem; }
         .presente .avatar { background: var(--success); color: white; }
 
-        .btn-action { padding: 10px 15px; border-radius: 12px; border: none; font-weight: 800; font-size: 0.75rem; cursor: pointer; }
+        .btn-action { padding: 10px 15px; border-radius: 12px; border: none; font-weight: 800; font-size: 0.7rem; cursor: pointer; min-width: 80px; }
         .btn-marcar { background: var(--ual-blue); color: white; }
         .btn-desmarcar { background: #fee2e2; color: var(--danger); }
 
-        input, select, button { width: 100%; padding: 16px; border-radius: 16px; border: 2px solid #e2e8f0; font-family: inherit; font-size: 1rem; box-sizing: border-box; }
-        .btn-primary { background: var(--ual-blue); color: white; font-weight: 800; border: none; margin-top: 15px; }
-        .btn-outline { background: white; color: var(--ual-blue); border: 2px solid var(--ual-blue); font-weight: 800; margin-top: 15px; }
+        /* --- FORMULARIOS --- */
+        input, select, button { width: 100%; padding: 16px; border-radius: 16px; border: 2px solid #e2e8f0; font-family: inherit; font-size: 1rem; box-sizing: border-box; outline: none; }
+        .btn-primary { background: var(--ual-blue); color: white; font-weight: 800; border: none; margin-top: 15px; cursor: pointer; }
+        .btn-outline { background: white; color: var(--ual-blue); border: 2px solid var(--ual-blue); font-weight: 800; margin-top: 15px; cursor: pointer; }
 
-        #reader { border-radius: 24px; overflow: hidden; border: 3px solid var(--ual-blue) !important; background: black; }
+        #reader { border-radius: 24px; overflow: hidden; border: 3px solid var(--ual-blue) !important; background: #000; margin-bottom: 20px; }
         .view { display: none; }
         .view.active { display: block; animation: fadeIn 0.4s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
-        #toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); padding: 14px 28px; border-radius: 50px; color: white; z-index: 9999; display: none; font-weight: 600; box-shadow: 0 10px 20px rgba(0,0,0,0.1); text-align: center; }
+        #toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); padding: 14px 28px; border-radius: 50px; color: white; z-index: 9999; display: none; font-weight: 600; box-shadow: 0 10px 20px rgba(0,0,0,0.1); text-align: center; min-width: 250px; }
     </style>
 </head>
 <body>
 
-<div id="offline-indicator">MODO OFFLINE ACTIVADO</div>
+<div id="offline-indicator">SIN CONEXIÓN (MODO LOCAL)</div>
 <div id="toast"></div>
 
 <div id="view-login" class="view active">
-    <div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--ual-blue); padding: 20px;">
-        <div style="background: white; border-radius: 35px; padding: 40px 30px; width: 100%; max-width: 400px; text-align: center;">
-            <h2 style="color:var(--ual-blue); margin-top:0;">Acceso SaludUAL</h2>
-            <input type="text" id="verificador-name" placeholder="Tu Nombre" style="margin-bottom:12px">
+    <div class="login-screen">
+        <div class="login-card">
+            <h2 style="color:var(--ual-blue); margin-top:0; font-weight: 800;">SaludUAL</h2>
+            <p style="color: var(--text-muted); margin-bottom: 20px;">Control de Asistencia</p>
+            <input type="text" id="verificador-name" placeholder="Nombre del Verificador" style="margin-bottom:12px">
             <select id="actividad-select" style="margin-bottom:12px"><option value="">Cargando actividades...</option></select>
-            <input type="password" id="login-pass" placeholder="Contraseña">
-            <button onclick="intentarLogin()" class="btn-primary">ENTRAR</button>
+            <input type="password" id="login-pass" placeholder="Contraseña de acceso">
+            <button onclick="intentarLogin()" class="btn-primary">ENTRAR AL LECTOR</button>
         </div>
     </div>
 </div>
 
 <div id="view-app" class="view">
     <div class="app-header">
-        <h1 id="display-actividad" style="margin:0; font-size: 1.1rem;"></h1>
-        <span id="sync-status" style="font-size: 0.7rem; opacity: 0.8;">Sincronizado</span>
+        <h1 id="display-actividad" style="margin:0; font-size: 1.1rem; text-transform: uppercase;"></h1>
+        <span id="sync-status" style="font-size: 0.7rem; opacity: 0.8;">Conectado a la nube</span>
     </div>
     <div class="container">
-        <div id="reader" style="margin-bottom:20px;"></div>
+        <div id="reader"></div>
         
         <div class="filter-bar">
             <div class="chip active" onclick="setFilter('todos', this)">Todos</div>
@@ -91,179 +98,50 @@
             <div class="chip" onclick="setFilter('rapido', this)">⚡ Rápido</div>
         </div>
 
-        <input type="text" id="input-search" placeholder="🔍 Buscar por DNI o Nombre..." onkeyup="filtrarLista()" style="margin-bottom:15px">
+        <input type="text" id="input-search" placeholder="🔍 Buscar por nombre o DNI..." onkeyup="filtrarLista()" style="margin-bottom:15px">
         <div id="lista-asistentes"></div>
-        <button onclick="showView('view-registro-rapido')" class="btn-outline">➕ REGISTRO RÁPIDO</button>
-        <button onclick="location.reload()" style="background:none; border:none; color:var(--text-muted); margin-top:20px; width:100%">Finalizar</button>
+        
+        <button onclick="showView('view-registro-rapido')" class="btn-outline">➕ REGISTRO RÁPIDO MANUAL</button>
+        <button onclick="location.reload()" style="background:none; border:none; color:var(--text-muted); margin-top:20px; width:100%; cursor:pointer;">Cerrar Sesión</button>
     </div>
 </div>
 
 <div id="view-registro-rapido" class="view">
     <div class="container" style="margin-top: 30px;">
-        <div style="background: white; border-radius: 35px; padding: 30px; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.05);">
-            <h3 style="margin-top:0;">⚡ Registro Rápido</h3>
+        <div class="login-card" style="max-width: none;">
+            <h3 style="margin-top:0; color: var(--ual-blue);">⚡ Nuevo Registro</h3>
+            <p style="font-size: 0.8rem; color: var(--text-muted);">Añade a alguien que no esté en la lista original.</p>
             <input type="text" id="reg-nombre" placeholder="Nombre completo" style="margin-bottom:12px">
             <input type="text" id="reg-dni" placeholder="DNI / NIE" style="margin-bottom:12px">
-            <input type="email" id="reg-email" placeholder="Email" style="margin-bottom:12px">
-            <button onclick="procesarRegistroRapido()" class="btn-primary">CONFIRMAR REGISTRO</button>
-            <button onclick="showView('view-app')" style="border:none; background:none; color:var(--ual-blue); margin-top:10px; font-weight:800">Cancelar</button>
+            <input type="email" id="reg-email" placeholder="Correo electrónico (@)" style="margin-bottom:12px">
+            <button onclick="procesarRegistroRapido()" class="btn-primary">REGISTRAR ENTRADA</button>
+            <button onclick="showView('view-app')" style="border:none; background:none; color:var(--ual-blue); margin-top:10px; font-weight:800; cursor:pointer;">Volver</button>
         </div>
     </div>
 </div>
 
 <script>
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxGksUqmtIctGGBadw7hNwS5fXMOuG4IA9m1rmz8lHBAnUbKiqR3hwthJeMsdXdCw2krg/exec';
+    
     let dbInscritos = [];
     let asistenciasLocales = new Set();
-    let registrosRapidosSet = new Set(); // Para identificar quiénes son registros rápidos
-    let colaOffline = JSON.parse(localStorage.getItem('colaOffline') || '[]');
+    let registrosRapidosSet = new Set(); 
+    let colaOffline = JSON.parse(localStorage.getItem('colaSaludUAL') || '[]');
     let configActual = { verificador: '', actividad: '' };
     let currentFilter = 'todos';
     let html5QrCode;
 
+    // --- MANEJO DE RED ---
     window.addEventListener('online', syncOfflineData);
     window.addEventListener('offline', () => document.getElementById('offline-indicator').style.display = 'block');
 
     async function syncOfflineData() {
         document.getElementById('offline-indicator').style.display = 'none';
         if (colaOffline.length === 0) return;
-        document.getElementById('sync-status').innerText = "Sincronizando...";
+        
+        document.getElementById('sync-status').innerText = "Sincronizando datos...";
         for (let i = 0; i < colaOffline.length; i++) {
             try {
                 await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(colaOffline[i]) });
                 colaOffline.splice(i, 1);
-                localStorage.setItem('colaOffline', JSON.stringify(colaOffline));
-                i--;
-            } catch (e) { break; }
-        }
-        document.getElementById('sync-status').innerText = "Sincronizado";
-    }
-
-    function setFilter(f, el) {
-        currentFilter = f;
-        document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-        el.classList.add('active');
-        renderLista(document.getElementById('input-search').value);
-    }
-
-    window.onload = async () => {
-        try {
-            const resp = await fetch(SCRIPT_URL + "?action=getActividades");
-            const acts = await resp.json();
-            const sel = document.getElementById('actividad-select');
-            acts.forEach(a => sel.innerHTML += `<option value="${a}">${a}</option>`);
-        } catch(e) { notify("Error de conexión", "#e74c3c"); }
-    };
-
-    function notify(msg, color = 'var(--ual-blue)') {
-        const t = document.getElementById('toast');
-        t.innerText = msg; t.style.background = color; t.style.display = 'block';
-        setTimeout(() => t.style.display = 'none', 3000);
-    }
-
-    async function intentarLogin() {
-        const v = document.getElementById('verificador-name').value;
-        const a = document.getElementById('actividad-select').value;
-        const pass = document.getElementById('login-pass').value;
-        if(!v || !a || !pass) return notify("Faltan datos", "#e74c3c");
-        
-        const resp = await fetch(`${SCRIPT_URL}?action=checkPass&type=escaneador&pass=${encodeURIComponent(pass)}`);
-        const res = await resp.json();
-        if(res.valid) {
-            configActual = { verificador: v, actividad: a };
-            document.getElementById('display-actividad').innerText = a;
-            cargarDatos();
-        } else notify("Contraseña incorrecta", "#e74c3c");
-    }
-
-    async function cargarDatos() {
-        const resp = await fetch(SCRIPT_URL + "?action=getInscritos");
-        dbInscritos = await resp.json();
-        showView('view-app');
-        renderLista();
-    }
-
-    function renderLista(f = "") {
-        const cont = document.getElementById('lista-asistentes');
-        cont.innerHTML = "";
-        
-        let filtrados = dbInscritos.filter(i => 
-            i.Actividad === configActual.actividad && 
-            (i.Nombre.toLowerCase().includes(f.toLowerCase()) || i.DNI.includes(f))
-        );
-
-        // Lógica de Filtros por Chips
-        if (currentFilter === 'pendientes') filtrados = filtrados.filter(i => !asistenciasLocales.has(i.DNI));
-        if (currentFilter === 'presentes') filtrados = filtrados.filter(i => asistenciasLocales.has(i.DNI));
-        if (currentFilter === 'rapido') filtrados = filtrados.filter(i => registrosRapidosSet.has(i.DNI));
-
-        filtrados.forEach(i => {
-            const presente = asistenciasLocales.has(i.DNI);
-            const esRapido = registrosRapidosSet.has(i.DNI);
-            const card = document.createElement('div');
-            card.className = `asistente-card ${presente ? 'presente' : ''}`;
-            card.innerHTML = `
-                <div class="avatar">${esRapido ? '⚡' : (presente ? '✓' : i.Nombre.charAt(0))}</div>
-                <div style="flex-grow:1"><b>${i.Nombre}</b><br><small>${i.DNI}</small></div>
-                <button class="btn-action ${presente ? 'btn-desmarcar' : 'btn-marcar'}" onclick="gestionarAsistencia('${i.Nombre}','${i.DNI}', ${presente})">
-                    ${presente ? 'ANULAR' : 'MARCAR'}
-                </button>`;
-            cont.appendChild(card);
-        });
-    }
-
-    async function gestionarAsistencia(nombre, dni, esAnulacion, email = "", tipo = "MANUAL") {
-        if (esAnulacion) asistenciasLocales.delete(dni);
-        else asistenciasLocales.add(dni);
-        
-        renderLista(document.getElementById('input-search').value);
-        const data = { nombre, dni, actividad: configActual.actividad, verificador: configActual.verificador, tipo: esAnulacion ? "ANULACIÓN" : tipo, email };
-
-        if (navigator.onLine) {
-            fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) });
-        } else {
-            colaOffline.push(data);
-            localStorage.setItem('colaOffline', JSON.stringify(colaOffline));
-            document.getElementById('offline-indicator').style.display = 'block';
-        }
-    }
-
-    function procesarRegistroRapido() {
-        const n = document.getElementById('reg-nombre').value, d = document.getElementById('reg-dni').value, e = document.getElementById('reg-email').value;
-        if(!n || !d || !e) return notify("Faltan datos", "#e74c3c");
-        
-        registrosRapidosSet.add(d);
-        dbInscritos.unshift({ Nombre: n, DNI: d, Actividad: configActual.actividad });
-        gestionarAsistencia(n, d, false, e, "Rápido");
-        
-        notify("⚡ Añadido y Registrado");
-        showView('view-app');
-        document.getElementById('reg-nombre').value = ""; document.getElementById('reg-dni').value = ""; document.getElementById('reg-email').value = "";
-    }
-
-    function filtrarLista() { renderLista(document.getElementById('input-search').value); }
-
-    function showView(id) { 
-        document.querySelectorAll('.view').forEach(v => v.classList.remove('active')); 
-        document.getElementById(id).classList.add('active'); 
-        if(id === 'view-app') iniciarEscaner();
-        else if(html5QrCode) {
-            html5QrCode.stop().catch(() => {});
-            html5QrCode = null;
-        }
-    }
-
-    function iniciarEscaner() {
-        if(!html5QrCode) html5QrCode = new Html5Qrcode("reader");
-        html5QrCode.start({ facingMode: "environment" }, { fps: 15, qrbox: 250 }, (text) => {
-            const enc = dbInscritos.find(i => (i.DNI === text || i.CodigoValidacion === text) && i.Actividad === configActual.actividad);
-            if(enc && !asistenciasLocales.has(enc.DNI)) {
-                gestionarAsistencia(enc.Nombre, enc.DNI, false);
-                notify("✅ " + enc.Nombre);
-                if(navigator.vibrate) navigator.vibrate(100);
-            }
-        }).catch(()=>{});
-    }
-</script>
-</body>
-</html>
+                localStorage.setItem('colaSaludUAL
