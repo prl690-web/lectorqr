@@ -441,15 +441,17 @@
     }
 
     function procesarRegistroRapido() {
-        const nom = document.getElementById('reg-nombre').value;
-        const ap1 = document.getElementById('reg-ape1').value;
-        const ap2 = document.getElementById('reg-ape2').value;
-        const dni = document.getElementById('reg-dni').value;
-        const em = document.getElementById('reg-email').value;
+        const nom = document.getElementById('reg-nombre').value.trim();
+        const ap1 = document.getElementById('reg-ape1').value.trim();
+        const ap2 = document.getElementById('reg-ape2').value.trim();
+        const dni = document.getElementById('reg-dni').value.trim().toUpperCase();
+        const em = document.getElementById('reg-email').value.trim();
         
         if (!nom || !ap1 || !ap2 || !dni || !em) return notify("Todos los campos son obligatorios", "var(--warning)");
         
         const nombreCompleto = `${nom} ${ap1} ${ap2}`;
+
+        // Añadimos localmente para que aparezca en la lista actual
         dbInscritos.push({ 
             Nombre: nombreCompleto, 
             DNI: dni, 
@@ -458,11 +460,13 @@
             isExpress: true
         });
         
-        marcar(dni, nombreCompleto, false, 'EXPRESS');
+        // MODIFICACIÓN AQUÍ: Enviamos el email como un argumento extra
+        marcar(dni, nombreCompleto, false, 'EXPRESS', em); 
         
         // Limpiar campos
         document.querySelectorAll('#view-registro-rapido input').forEach(i => i.value = "");
         showView('view-app');
+        notify("Registro Express enviado", "var(--success)");
     }
 </script>
 </body>
