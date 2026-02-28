@@ -4,265 +4,465 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Lector QR #SaludUAL</title>
-    <link href="https://fonts.googleapis.com/css2?family=Catamaran:wght@300;500;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Catamaran:wght@300;500;800&family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
         :root {
-            --ual-blue: #003C71;
-            --ual-accent: #0076c0;
-            --success: #2ecc71;
-            --danger: #e74c3c;
-            --warning: #f1c40f;
-            --info: #3498db;
-            --bg: #f8fafc;
-            --white: #ffffff;
-            --text-main: #1e293b;
-            --text-muted: #64748b;
+            --ual-blue: #003C71; --ual-accent: #0076c0; --success: #10b981;
+            --danger: #ef4444; --warning: #f59e0b; --bg: #f1f5f9;
+            --white: #ffffff; --text-main: #0f172a; --text-muted: #64748b;
+            --card-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg); margin: 0; color: var(--text-main); }
+        
+        #reader { border-radius: 20px; overflow: hidden; border: 4px solid var(--ual-blue); transition: all 0.3s ease; background: #000; position: relative; }
+        #reader.scan-success { border-color: var(--success) !important; box-shadow: 0 0 20px var(--success); }
+        #reader.scan-warning { border-color: var(--warning) !important; box-shadow: 0 0 20px var(--warning); }
+        #reader.scan-error { border-color: var(--danger) !important; box-shadow: 0 0 20px var(--danger); }
+
+        #loading-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            display: none; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 20000; backdrop-filter: blur(4px);
+        }
+        .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid var(--ual-blue); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .modern-logo { width: 80px; height: 80px; margin: 0 auto 15px; background: #fff; border-radius: 20px; display: flex; align-items: center; justify-content: center; box-shadow: var(--card-shadow); }
+        .qr-icon-svg { width: 40px; height: 40px; fill: var(--ual-blue); }
+
+        #toast { 
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); 
+            padding: 15px 25px; border-radius: 16px; color: white; z-index: 9999; 
+            display: none; font-weight: 700; text-align: center; min-width: 280px;
+            box-shadow: 0 10px 15px rgba(0,0,0,0.2);
         }
 
-        body { font-family: 'Catamaran', sans-serif; background-color: var(--bg); margin: 0; color: var(--text-main); }
+        .filter-bar { display: flex; gap: 8px; margin: 10px 0; overflow-x: auto; padding: 5px 0; scrollbar-width: none; }
+        .filter-bar::-webkit-scrollbar { display: none; }
+        .filter-btn { padding: 8px 16px; border-radius: 20px; border: 1px solid #e2e8f0; background: white; font-size: 0.8rem; font-weight: 700; color: var(--text-muted); cursor: pointer; white-space: nowrap; }
+        .filter-btn.active { background: var(--ual-blue); color: white; }
 
-        /* --- INDICADOR OFFLINE --- */
-        #offline-indicator {
-            position: fixed; top: 10px; right: 10px; background: var(--danger);
-            color: white; padding: 5px 12px; border-radius: 20px; font-size: 0.7rem;
-            font-weight: 800; z-index: 10001; display: none;
-        }
-
-        /* --- APP INTERFACE --- */
-        .app-header { background: var(--ual-blue); color: white; padding: 20px; text-align: center; border-radius: 0 0 25px 25px; position: sticky; top: 0; z-index: 100; }
+        .app-header { background: var(--ual-blue); color: white; padding: 15px; text-align: center; border-radius: 0 0 20px 20px; position: sticky; top: 0; z-index: 100; }
         .container { max-width: 500px; margin: 0 auto; padding: 15px; }
+        .asistente-card { background: white; border-radius: 12px; padding: 10px; display: flex; align-items: center; gap: 12px; margin-bottom: 8px; border: 1px solid #e2e8f0; }
+        .asistente-card.presente { border-left: 5px solid var(--success); background: #f0fdf4; }
         
-        /* BARRA DE FILTROS OPTIMIZADA */
-        .filter-bar { display: flex; gap: 8px; margin-bottom: 15px; overflow-x: auto; padding: 5px 0; -webkit-overflow-scrolling: touch; }
-        .chip { padding: 8px 14px; border-radius: 20px; background: var(--white); border: 1px solid #e2e8f0; font-size: 0.75rem; cursor: pointer; white-space: nowrap; color: var(--text-muted); font-weight: 800; transition: 0.2s; }
-        .chip.active { background: var(--ual-blue); color: white; border-color: var(--ual-blue); }
+        .btn-primary { background: var(--ual-blue); color: white; width: 100%; font-weight: 800; border: none; padding: 14px; border-radius: 12px; cursor: pointer; }
+        .btn-outline { background: transparent; color: var(--ual-blue); border: 2px solid var(--ual-blue); font-weight: 800; padding: 12px; border-radius: 12px; width: 100%; cursor: pointer; }
 
-        .asistente-card { background: var(--white); border-radius: 20px; padding: 16px; display: flex; align-items: center; gap: 15px; margin-bottom: 12px; border: 1px solid #f1f5f9; transition: 0.3s; }
-        .asistente-card.presente { background: #f0fff4; border-color: #c6f6d5; border-left: 5px solid var(--success); }
-        .avatar { width: 48px; height: 48px; border-radius: 14px; background: #e2e8f0; color: var(--ual-blue); display: flex; align-items: center; justify-content: center; font-weight: 800; flex-shrink: 0; }
-        .presente .avatar { background: var(--success); color: white; }
-
-        .btn-action { padding: 10px 15px; border-radius: 12px; border: none; font-weight: 800; font-size: 0.75rem; cursor: pointer; }
-        .btn-marcar { background: var(--ual-blue); color: white; }
-        .btn-desmarcar { background: #fee2e2; color: var(--danger); }
-
-        input, select, button { width: 100%; padding: 16px; border-radius: 16px; border: 2px solid #e2e8f0; font-family: inherit; font-size: 1rem; box-sizing: border-box; }
-        .btn-primary { background: var(--ual-blue); color: white; font-weight: 800; border: none; margin-top: 15px; }
-        .btn-outline { background: white; color: var(--ual-blue); border: 2px solid var(--ual-blue); font-weight: 800; margin-top: 15px; }
-
-        #reader { border-radius: 24px; overflow: hidden; border: 3px solid var(--ual-blue) !important; background: black; }
         .view { display: none; }
-        .view.active { display: block; animation: fadeIn 0.4s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .view.active { display: block; }
+        #view-login { min-height: 100vh; display: none; align-items: center; justify-content: center; background: var(--ual-blue); padding: 20px; }
+        #view-login.active { display: flex; }
+        .login-card { background: white; border-radius: 25px; padding: 30px; width: 100%; max-width: 400px; text-align: center; }
+        input, select { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd; margin-bottom: 12px; font-size: 1rem; }
         
-        #toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); padding: 14px 28px; border-radius: 50px; color: white; z-index: 9999; display: none; font-weight: 600; box-shadow: 0 10px 20px rgba(0,0,0,0.1); text-align: center; }
+        /* Dashboard Styles */
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        .stat-card { background: white; padding: 20px; border-radius: 20px; text-align: center; box-shadow: var(--card-shadow); border: 1px solid #eee; }
+        .stat-val { font-size: 1.8rem; font-weight: 800; color: var(--ual-blue); display: block; }
+        .stat-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; }
+        .progress-circle { width: 120px; height: 120px; margin: 20px auto; border-radius: 50%; display: flex; align-items: center; justify-content: center; position: relative; background: conic-gradient(var(--success) 0%, #eee 0%); }
+        .progress-circle::after { content: attr(data-percent); position: absolute; width: 100px; height: 100px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.2rem; }
     </style>
 </head>
 <body>
 
-<div id="offline-indicator">MODO OFFLINE ACTIVADO</div>
+<div id="loading-overlay"><div class="spinner"></div><p id="loading-text" style="margin-top:10px;">Cargando...</p></div>
 <div id="toast"></div>
 
+<!-- LOGIN -->
 <div id="view-login" class="view active">
-    <div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--ual-blue); padding: 20px;">
-        <div style="background: white; border-radius: 35px; padding: 40px 30px; width: 100%; max-width: 400px; text-align: center;">
-            <h2 style="color:var(--ual-blue); margin-top:0;">Gestor de Eventos #SaludUAL</h2>
-            <input type="text" id="verificador-name" placeholder="Tu Nombre" style="margin-bottom:12px">
-            <select id="actividad-select" style="margin-bottom:12px"><option value="">Cargando actividades...</option></select>
-            <input type="password" id="login-pass" placeholder="Contraseña">
-            <button onclick="intentarLogin()" class="btn-primary">ENTRAR</button>
+    <div class="login-card">
+        <div class="modern-logo">
+            <svg class="qr-icon-svg" viewBox="0 0 24 24"><path d="M3 11h8V3H3v8zm2-6h4v4H5V5zM3 21h8v-8H3v8zm2-6h4v4H5v-4zM13 3v8h8V3h-8zm6 6h-4V5h4v4zM13 13h2v2h-2v-2zm2 2h2v2h-2v-2zm2-2h2v2h-2v-2zm0 4h2v2h-2v-2zm-2 2h2v2h-2v-2zm-4 0h2v2h-2v-2zm2-4h2v2h-2v-2zm0 2h2v2h-2v-2z"/></svg>
         </div>
+        <h2 style="margin:0; color:var(--ual-blue)">Acceso SaludUAL</h2>
+        <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:20px;">Control de Asistencia</p>
+        
+        <div style="display:flex; gap:10px; margin-bottom: 20px; background:#f1f5f9; padding:5px; border-radius:12px;">
+            <button id="role-esc" style="flex:1; border:none; padding:10px; border-radius:8px; font-weight:700; cursor:pointer;" onclick="setRole('escaneador')">Escaneador</button>
+            <button id="role-adm" style="flex:1; border:none; padding:10px; border-radius:8px; font-weight:700; cursor:pointer;" onclick="setRole('admin')">Admin</button>
+        </div>
+
+        <div id="field-name-container">
+            <input type="text" id="verificador-name" placeholder="Tu Nombre">
+        </div>
+        <select id="actividad-select"><option value="">Cargando actividades...</option></select>
+        <input type="password" id="login-pass" placeholder="Contraseña">
+        <button onclick="intentarLogin()" class="btn-primary">ENTRAR AL SISTEMA</button>
     </div>
 </div>
 
-<div id="view-app" class="view">
+<!-- DASHBOARD ADMIN -->
+<div id="view-admin" class="view">
     <div class="app-header">
-        <h1 id="display-actividad" style="margin:0; font-size: 1.1rem;"></h1>
-        <span id="sync-status" style="font-size: 0.7rem; opacity: 0.8;">Sincronizado</span>
+        <h1 style="margin:0; font-size: 1.1rem;">Panel de Control</h1>
+        <span id="admin-actividad-title" style="font-size:0.8rem; opacity:0.8;">Actividad</span>
     </div>
     <div class="container">
-        <div id="reader" style="margin-bottom:20px;"></div>
-        
-        <div class="filter-bar">
-            <div class="chip active" onclick="setFilter('todos', this)">Todos</div>
-            <div class="chip" onclick="setFilter('pendientes', this)">Pendientes</div>
-            <div class="chip" onclick="setFilter('presentes', this)">Presentes</div>
-            <div class="chip" onclick="setFilter('rapido', this)">⚡ Rápido</div>
+        <div class="stat-card" style="margin-bottom:15px;">
+            <div id="stat-percent-circle" class="progress-circle" data-percent="0%"></div>
+            <span class="stat-label">Asistencia General</span>
         </div>
-
-        <input type="text" id="input-search" placeholder="🔍 Buscar por DNI o Nombre..." onkeyup="filtrarLista()" style="margin-bottom:15px">
-        <div id="lista-asistentes"></div>
-        <button onclick="showView('view-registro-rapido')" class="btn-outline">➕ Registro Express</button>
-        <button onclick="location.reload()" style="background:none; border:none; color:var(--text-muted); margin-top:20px; width:100%">Finalizar</button>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span id="stat-total" class="stat-val">0</span>
+                <span class="stat-label">Inscritos</span>
+            </div>
+            <div class="stat-card">
+                <span id="stat-present" class="stat-val" style="color:var(--success)">0</span>
+                <span class="stat-label">Presentes</span>
+            </div>
+            <div class="stat-card">
+                <span id="stat-absent" class="stat-val" style="color:var(--danger)">0</span>
+                <span class="stat-label">Ausentes</span>
+            </div>
+            <div class="stat-card">
+                <span id="stat-manual" class="stat-val" style="color:var(--warning)">0</span>
+                <span class="stat-label">Registros Express</span>
+            </div>
+        </div>
+        <button onclick="showView('view-app')" class="btn-primary">IR AL LECTOR</button>
+        <button onclick="location.reload()" class="btn-outline" style="margin-top:10px; border:none; color: var(--danger);">Cerrar Sesión</button>
     </div>
 </div>
 
+<!-- LECTOR APP -->
+<div id="view-app" class="view">
+    <div class="app-header">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+             <button onclick="configActual.rol === 'admin' ? showView('view-admin') : location.reload()" style="background:none; border:none; color:white; font-size:1.2rem;">✕</button>
+             <h1 id="display-actividad" style="margin:0; font-size: 1rem;">Actividad</h1>
+             <div id="count-badge" style="background:rgba(255,255,255,0.2); padding:4px 10px; border-radius:10px; font-size:0.75rem; font-weight:700;">0/0</div>
+        </div>
+    </div>
+    <div class="container">
+        <div id="reader" style="width:100%; margin-bottom:15px;"></div>
+        
+        <input type="text" id="input-search" placeholder="Buscar por DNI o Nombre..." onkeyup="renderLista()">
+        
+        <div class="filter-bar">
+            <button class="filter-btn active" onclick="setFilter('all', this)">Todos</button>
+            <button class="filter-btn" onclick="setFilter('present', this)">Presentes</button>
+            <button class="filter-btn" onclick="setFilter('pending', this)">Ausentes</button>
+            <button class="filter-btn" onclick="setFilter('express', this)">Express ⚡</button>
+        </div>
+        
+        <div id="lista-asistentes" style="max-height: 400px; overflow-y: auto; padding-right: 5px;"></div>
+        
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:15px;">
+            <button onclick="showView('view-registro-rapido')" class="btn-outline" style="font-size:0.8rem;">⚡ REGISTRO MANUAL</button>
+            <button id="btn-back-admin" onclick="showView('view-admin')" class="btn-outline" style="display:none; font-size:0.8rem;">📊 ESTADÍSTICAS</button>
+        </div>
+
+        <button onclick="location.reload()" style="border:none; background:none; color:var(--danger); width:100%; margin-top:30px; font-weight: 700; font-size: 0.9rem;">CERRAR SESIÓN</button>
+    </div>
+</div>
+
+<!-- REGISTRO MANUAL DETALLADO -->
 <div id="view-registro-rapido" class="view">
-    <div class="container" style="margin-top: 30px;">
-        <div style="background: white; border-radius: 35px; padding: 30px; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.05);">
-            <h3 style="margin-top:0;">⚡ Registro Rápido</h3>
-            <input type="text" id="reg-nombre" placeholder="Nombre completo" style="margin-bottom:12px">
-            <input type="text" id="reg-dni" placeholder="DNI / NIE" style="margin-bottom:12px">
-            <input type="email" id="reg-email" placeholder="Email" style="margin-bottom:12px">
-            <button onclick="procesarRegistroRapido()" class="btn-primary">CONFIRMAR REGISTRO</button>
-            <button onclick="showView('view-app')" style="border:none; background:none; color:var(--ual-blue); margin-top:10px; font-weight:800">Cancelar</button>
+    <div class="container">
+        <div style="background:white; padding:25px; border-radius:25px; box-shadow: var(--card-shadow);">
+            <h3 style="margin-top:0; color:var(--ual-blue)">Nuevo Registro Express</h3>
+            <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:20px;">Todos los campos son obligatorios</p>
+            
+            <input type="text" id="reg-nombre" placeholder="Nombre">
+            <input type="text" id="reg-ape1" placeholder="Primer Apellido">
+            <input type="text" id="reg-ape2" placeholder="Segundo Apellido">
+            <input type="text" id="reg-dni" placeholder="DNI / NIE / Pasaporte">
+            <input type="email" id="reg-email" placeholder="Correo Electrónico">
+            
+            <button onclick="procesarRegistroRapido()" class="btn-primary" style="margin-top:10px;">GUARDAR Y MARCAR PRESENTE</button>
+            <button onclick="showView('view-app')" class="btn-outline" style="margin-top:10px; border:none;">Cancelar</button>
         </div>
     </div>
 </div>
 
 <script>
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxQiBOlLAAwYas0UxuS7PiUeCK5iiXs_JjyQG5IoUaer5Na34Xu_7opqBdCsmZz5L6Kdg/exec';
-    let dbInscritos = [];
-    let asistenciasLocales = new Set();
-    let registrosRapidosSet = new Set(); // Para identificar quiénes son registros rápidos
-    let colaOffline = JSON.parse(localStorage.getItem('colaOffline') || '[]');
-    let configActual = { verificador: '', actividad: '' };
-    let currentFilter = 'todos';
-    let html5QrCode;
+    let dbInscritos = [], dbAsistencias = [], asistenciasLocales = new Set();
+    let configActual = { verificador: '', actividad: '', rol: 'escaneador', filtro: 'all' };
+    let html5QrCode, audioCtx, escanerPausado = false;
 
-    window.addEventListener('online', syncOfflineData);
-    window.addEventListener('offline', () => document.getElementById('offline-indicator').style.display = 'block');
-
-    async function syncOfflineData() {
-        document.getElementById('offline-indicator').style.display = 'none';
-        if (colaOffline.length === 0) return;
-        document.getElementById('sync-status').innerText = "Sincronizando...";
-        for (let i = 0; i < colaOffline.length; i++) {
-            try {
-                await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(colaOffline[i]) });
-                colaOffline.splice(i, 1);
-                localStorage.setItem('colaOffline', JSON.stringify(colaOffline));
-                i--;
-            } catch (e) { break; }
-        }
-        document.getElementById('sync-status').innerText = "Sincronizado";
-    }
-
-    function setFilter(f, el) {
-        currentFilter = f;
-        document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-        el.classList.add('active');
-        renderLista(document.getElementById('input-search').value);
-    }
-
-    window.onload = async () => {
+    async function safeFetchJson(url) {
         try {
-            const resp = await fetch(SCRIPT_URL + "?action=getActividades");
-            const acts = await resp.json();
-            const sel = document.getElementById('actividad-select');
-            acts.forEach(a => sel.innerHTML += `<option value="${a}">${a}</option>`);
-        } catch(e) { notify("Error de conexión", "#e74c3c"); }
-    };
+            const response = await fetch(url);
+            const text = await response.text();
+            if (text.trim() === "Servicio SaludUAL Activo") return [];
+            const jsonStartIndex = text.indexOf('[');
+            const jsonObjectStartIndex = text.indexOf('{');
+            let cleanText = text;
+            if (jsonStartIndex !== -1 || jsonObjectStartIndex !== -1) {
+                const start = (jsonStartIndex !== -1 && (jsonObjectStartIndex === -1 || jsonStartIndex < jsonObjectStartIndex)) ? jsonStartIndex : jsonObjectStartIndex;
+                cleanText = text.substring(start);
+            }
+            return JSON.parse(cleanText);
+        } catch (e) {
+            console.error("Error servidor:", e);
+            throw new Error("Respuesta no válida.");
+        }
+    }
+
+    function playBeep(type) {
+        try {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.frequency.value = type === 'success' ? 880 : (type === 'warning' ? 440 : 220);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.2);
+            if (navigator.vibrate) navigator.vibrate(type === 'success' ? 50 : 200);
+        } catch(e) {}
+    }
 
     function notify(msg, color = 'var(--ual-blue)') {
         const t = document.getElementById('toast');
-        t.innerText = msg; t.style.background = color; t.style.display = 'block';
-        setTimeout(() => t.style.display = 'none', 3000);
+        t.innerHTML = msg; t.style.background = color; t.style.display = 'block';
+        setTimeout(() => t.style.display = 'none', 4000);
     }
 
+    function showLoading(show, text = "Cargando...") {
+        document.getElementById('loading-overlay').style.display = show ? 'flex' : 'none';
+        document.getElementById('loading-text').innerText = text;
+    }
+
+    function setRole(r) {
+        configActual.rol = r;
+        const btnEsc = document.getElementById('role-esc');
+        const btnAdm = document.getElementById('role-adm');
+        const nameContainer = document.getElementById('field-name-container');
+
+        if (r === 'admin') {
+            btnAdm.style.background = 'var(--ual-blue)'; btnAdm.style.color = 'white';
+            btnEsc.style.background = 'transparent'; btnEsc.style.color = 'var(--text-muted)';
+            nameContainer.style.display = 'none';
+        } else {
+            btnEsc.style.background = 'var(--ual-blue)'; btnEsc.style.color = 'white';
+            btnAdm.style.background = 'transparent'; btnAdm.style.color = 'var(--text-muted)';
+            nameContainer.style.display = 'block';
+        }
+    }
+
+    window.onload = async () => {
+        setRole('escaneador');
+        try {
+            const acts = await safeFetchJson(SCRIPT_URL + "?action=getActividades");
+            const sel = document.getElementById('actividad-select');
+            sel.innerHTML = '<option value="">Elegir actividad...</option>';
+            if (Array.isArray(acts)) {
+                acts.forEach(a => { if (a) sel.innerHTML += `<option value="${encodeURIComponent(a)}">${a}</option>`; });
+            }
+        } catch(e) { notify("Error de conexión", "var(--danger)"); }
+    };
+
     async function intentarLogin() {
-        const v = document.getElementById('verificador-name').value;
-        const a = document.getElementById('actividad-select').value;
         const pass = document.getElementById('login-pass').value;
-        if(!v || !a || !pass) return notify("Faltan datos", "#e74c3c");
+        const act = document.getElementById('actividad-select').value;
+        const name = document.getElementById('verificador-name').value;
         
-        const resp = await fetch(`${SCRIPT_URL}?action=checkPass&type=escaneador&pass=${encodeURIComponent(pass)}`);
-        const res = await resp.json();
-        if(res.valid) {
-            configActual = { verificador: v, actividad: a };
-            document.getElementById('display-actividad').innerText = a;
-            cargarDatos();
-        } else notify("Contraseña incorrecta", "#e74c3c");
+        if (!pass || !act || (configActual.rol === 'escaneador' && !name)) 
+            return notify("Faltan datos de acceso", "var(--warning)");
+
+        showLoading(true, "Iniciando sesión...");
+        try {
+            const res = await safeFetchJson(`${SCRIPT_URL}?action=checkPass&type=${configActual.rol}&pass=${encodeURIComponent(pass)}`);
+            if (res && res.valid) {
+                configActual.actividad = decodeURIComponent(act);
+                configActual.verificador = configActual.rol === 'admin' ? 'Administrador' : name;
+                await cargarDatos();
+            } else {
+                notify("Contraseña inválida", "var(--danger)");
+                showLoading(false);
+            }
+        } catch(e) { notify("Error de red", "var(--danger)"); showLoading(false); }
     }
 
     async function cargarDatos() {
-        const resp = await fetch(SCRIPT_URL + "?action=getInscritos");
-        dbInscritos = await resp.json();
-        showView('view-app');
+        showLoading(true, "Sincronizando...");
+        try {
+            const [ri, ra] = await Promise.all([
+                safeFetchJson(SCRIPT_URL + "?action=getInscritos"),
+                safeFetchJson(SCRIPT_URL + "?action=getAllAsistencias")
+            ]);
+            
+            dbInscritos = Array.isArray(ri) ? ri.filter(i => i.Actividad === configActual.actividad) : [];
+            dbAsistencias = Array.isArray(ra) ? ra.filter(a => a.Actividad === configActual.actividad) : [];
+            asistenciasLocales = new Set(dbAsistencias.map(a => String(a.DNI).trim().toUpperCase()));
+
+            updateDashboard();
+            
+            if (configActual.rol === 'admin') {
+                showView('view-admin');
+                document.getElementById('btn-back-admin').style.display = 'block';
+            } else {
+                showView('view-app');
+            }
+        } catch(e) { notify("Error al cargar datos", "var(--danger)"); } 
+        finally { showLoading(false); }
+    }
+
+    function updateDashboard() {
+        const total = dbInscritos.length;
+        const presentes = asistenciasLocales.size;
+        const ausentes = total - presentes;
+        const manuales = dbAsistencias.filter(a => a.Tipo === 'MANUAL').length;
+        const percent = total > 0 ? Math.round((presentes / total) * 100) : 0;
+
+        document.getElementById('admin-actividad-title').innerText = configActual.actividad;
+        document.getElementById('stat-total').innerText = total;
+        document.getElementById('stat-present').innerText = presentes;
+        document.getElementById('stat-absent').innerText = ausentes;
+        document.getElementById('stat-manual').innerText = manuales;
+        
+        const circle = document.getElementById('stat-percent-circle');
+        circle.setAttribute('data-percent', percent + '%');
+        circle.style.background = `conic-gradient(var(--success) ${percent}%, #eee ${percent}%)`;
+    }
+
+    function setFilter(f, btn) {
+        configActual.filtro = f;
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
         renderLista();
     }
 
-    function renderLista(f = "") {
+    function renderLista() {
+        const search = document.getElementById('input-search').value.toLowerCase();
         const cont = document.getElementById('lista-asistentes');
         cont.innerHTML = "";
         
-        let filtrados = dbInscritos.filter(i => 
-            i.Actividad === configActual.actividad && 
-            (i.Nombre.toLowerCase().includes(f.toLowerCase()) || i.DNI.includes(f))
+        let filtered = dbInscritos.filter(i => 
+            String(i.Nombre).toLowerCase().includes(search) || String(i.DNI).toLowerCase().includes(search)
         );
 
-        // Lógica de Filtros por Chips
-        if (currentFilter === 'pendientes') filtrados = filtrados.filter(i => !asistenciasLocales.has(i.DNI));
-        if (currentFilter === 'presentes') filtrados = filtrados.filter(i => asistenciasLocales.has(i.DNI));
-        if (currentFilter === 'rapido') filtrados = filtrados.filter(i => registrosRapidosSet.has(i.DNI));
+        if (configActual.filtro === 'present') filtered = filtered.filter(i => asistenciasLocales.has(String(i.DNI).trim().toUpperCase()));
+        if (configActual.filtro === 'pending') filtered = filtered.filter(i => !asistenciasLocales.has(String(i.DNI).trim().toUpperCase()));
+        if (configActual.filtro === 'express') filtered = filtered.filter(i => i.isExpress === true);
 
-        filtrados.forEach(i => {
-            const presente = asistenciasLocales.has(i.DNI);
-            const esRapido = registrosRapidosSet.has(i.DNI);
-            const card = document.createElement('div');
-            card.className = `asistente-card ${presente ? 'presente' : ''}`;
-            card.innerHTML = `
-                <div class="avatar">${esRapido ? '⚡' : (presente ? '✓' : i.Nombre.charAt(0))}</div>
-                <div style="flex-grow:1"><b>${i.Nombre}</b><br><small>${i.DNI}</small></div>
-                <button class="btn-action ${presente ? 'btn-desmarcar' : 'btn-marcar'}" onclick="gestionarAsistencia('${i.Nombre}','${i.DNI}', ${presente})">
-                    ${presente ? 'ANULAR' : 'MARCAR'}
+        document.getElementById('count-badge').innerText = `${asistenciasLocales.size}/${dbInscritos.length}`;
+
+        filtered.forEach(i => {
+            const isPresent = asistenciasLocales.has(String(i.DNI).trim().toUpperCase());
+            const div = document.createElement('div');
+            div.className = `asistente-card ${isPresent ? 'presente' : ''}`;
+            const loc = i.Ubicacion || i["Ubicación"] || "";
+            div.innerHTML = `
+                <div style="flex:1">
+                    <div style="font-weight:700; font-size:0.9rem;">${i.Nombre} ${i.isExpress ? '⚡' : ''}</div>
+                    <div style="font-size:0.7rem; color:var(--text-muted)">${i.DNI} ${loc ? '• 📍 ' + loc : ''}</div>
+                </div>
+                <button onclick="marcar('${i.DNI}', '${i.Nombre.replace(/'/g,"")}', ${isPresent}, 'LISTADO')" 
+                    style="border:none; background:${isPresent?'#fee2e2':'#dcfce7'}; color:${isPresent?'#b91c1c':'#15803d'}; padding:8px 12px; border-radius:8px; font-weight:700; font-size:0.65rem; cursor:pointer;">
+                    ${isPresent ? 'ANULAR' : 'MARCAR'}
                 </button>`;
-            cont.appendChild(card);
+            cont.appendChild(div);
         });
     }
 
-    async function gestionarAsistencia(nombre, dni, esAnulacion, email = "", tipo = "MANUAL") {
-        if (esAnulacion) asistenciasLocales.delete(dni);
-        else asistenciasLocales.add(dni);
-        
-        renderLista(document.getElementById('input-search').value);
-        const data = { nombre, dni, actividad: configActual.actividad, verificador: configActual.verificador, tipo: esAnulacion ? "ANULACIÓN" : tipo, email };
+    async function marcar(dni, nombre, anular, tipoInput = 'MANUAL') {
+        dni = String(dni).trim().toUpperCase();
+        let tipoFinal = anular ? 'ANULADO' : tipoInput;
 
-        if (navigator.onLine) {
-            fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) });
+        if (anular) {
+            asistenciasLocales.delete(dni);
+            dbAsistencias = dbAsistencias.filter(a => String(a.DNI).toUpperCase() !== dni);
         } else {
-            colaOffline.push(data);
-            localStorage.setItem('colaOffline', JSON.stringify(colaOffline));
-            document.getElementById('offline-indicator').style.display = 'block';
+            asistenciasLocales.add(dni);
+            dbAsistencias.push({ DNI: dni, Tipo: tipoFinal });
+            playBeep('success');
         }
+        
+        renderLista();
+        updateDashboard();
+        
+        const url = `${SCRIPT_URL}?action=mark&dni=${dni}&nombre=${encodeURIComponent(nombre)}&actividad=${encodeURIComponent(configActual.actividad)}&verificador=${encodeURIComponent(configActual.verificador)}&tipo=${tipoFinal}`;
+        fetch(url, { mode: 'no-cors' }).catch(() => {});
     }
 
-    function procesarRegistroRapido() {
-        const n = document.getElementById('reg-nombre').value, d = document.getElementById('reg-dni').value, e = document.getElementById('reg-email').value;
-        if(!n || !d || !e) return notify("Faltan datos", "#e74c3c");
+    function procesarLecturaQR(text) {
+        if (escanerPausado) return;
         
-        registrosRapidosSet.add(d);
-        dbInscritos.unshift({ Nombre: n, DNI: d, Actividad: configActual.actividad });
-        gestionarAsistencia(n, d, false, e, "Rápido");
-        
-        notify("⚡ Añadido y Registrado");
-        showView('view-app');
-        document.getElementById('reg-nombre').value = ""; document.getElementById('reg-dni').value = ""; document.getElementById('reg-email').value = "";
-    }
+        const readerEl = document.getElementById('reader');
+        const dniLimpio = String(text).trim().toUpperCase();
+        const user = dbInscritos.find(i => String(i.DNI).trim().toUpperCase() === dniLimpio || (i.CodigoValidacion && String(i.CodigoValidacion).trim().toUpperCase() === dniLimpio));
 
-    function filtrarLista() { renderLista(document.getElementById('input-search').value); }
+        escanerPausado = true; // Pausa inmediata para evitar rebotes
 
-    function showView(id) { 
-        document.querySelectorAll('.view').forEach(v => v.classList.remove('active')); 
-        document.getElementById(id).classList.add('active'); 
-        if(id === 'view-app') iniciarEscaner();
-        else if(html5QrCode) {
-            html5QrCode.stop().catch(() => {});
-            html5QrCode = null;
+        if (user) {
+            const yaEsta = asistenciasLocales.has(String(user.DNI).trim().toUpperCase());
+            if (yaEsta) {
+                readerEl.className = "scan-warning"; playBeep('warning');
+                notify(`YA REGISTRADO:<br>${user.Nombre}`, "var(--warning)");
+            } else {
+                readerEl.className = "scan-success"; playBeep('success');
+                const loc = user.Ubicacion || user["Ubicación"] || "";
+                let msg = `PRESENTADO:<br>${user.Nombre}`;
+                if(loc) msg += `<br><strong style="font-size:1.1rem">📍 ASIENTO: ${loc}</strong>`;
+                notify(msg, "var(--success)");
+                marcar(user.DNI, user.Nombre, false, 'QR');
+            }
+        } else {
+            readerEl.className = "scan-error"; playBeep('error');
+            notify("QR NO RECONOCIDO", "var(--danger)");
         }
+
+        // Reinicio tras 2 segundos de pausa
+        setTimeout(() => { 
+            if(readerEl) readerEl.className = ""; 
+            escanerPausado = false;
+        }, 2000);
     }
 
     function iniciarEscaner() {
-        if(!html5QrCode) html5QrCode = new Html5Qrcode("reader");
-        html5QrCode.start({ facingMode: "environment" }, { fps: 15, qrbox: 250 }, (text) => {
-            const enc = dbInscritos.find(i => (i.DNI === text || i.CodigoValidacion === text) && i.Actividad === configActual.actividad);
-            if(enc && !asistenciasLocales.has(enc.DNI)) {
-                gestionarAsistencia(enc.Nombre, enc.DNI, false);
-                notify("✅ " + enc.Nombre);
-                if(navigator.vibrate) navigator.vibrate(100);
-            }
-        }).catch(()=>{});
+        if (!html5QrCode) html5QrCode = new Html5Qrcode("reader");
+        html5QrCode.start({ facingMode: "environment" }, { fps: 15, qrbox: 250 }, procesarLecturaQR)
+            .catch(() => notify("Error al abrir cámara", "var(--danger)"));
+    }
+
+    function showView(id) {
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        
+        if (id === 'view-app') {
+            document.getElementById('display-actividad').innerText = configActual.actividad;
+            iniciarEscaner();
+            renderLista();
+        } else if (html5QrCode) { 
+            html5QrCode.stop().then(() => { html5QrCode = null; }).catch(() => {});
+        }
+        
+        if (id === 'view-admin') updateDashboard();
+    }
+
+    function procesarRegistroRapido() {
+        const nom = document.getElementById('reg-nombre').value;
+        const ap1 = document.getElementById('reg-ape1').value;
+        const ap2 = document.getElementById('reg-ape2').value;
+        const dni = document.getElementById('reg-dni').value;
+        const em = document.getElementById('reg-email').value;
+        
+        if (!nom || !ap1 || !ap2 || !dni || !em) return notify("Todos los campos son obligatorios", "var(--warning)");
+        
+        const nombreCompleto = `${nom} ${ap1} ${ap2}`;
+        dbInscritos.push({ 
+            Nombre: nombreCompleto, 
+            DNI: dni, 
+            Email: em,
+            Actividad: configActual.actividad,
+            isExpress: true
+        });
+        
+        marcar(dni, nombreCompleto, false, 'EXPRESS');
+        
+        // Limpiar campos
+        document.querySelectorAll('#view-registro-rapido input').forEach(i => i.value = "");
+        showView('view-app');
     }
 </script>
 </body>
