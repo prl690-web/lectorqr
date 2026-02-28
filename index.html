@@ -22,34 +22,22 @@
 
         body { font-family: 'Catamaran', sans-serif; background-color: var(--bg); margin: 0; color: var(--text-main); }
 
-        /* --- FEEDBACK VISUAL --- */
-        #visual-feedback {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            display: none; flex-direction: column; justify-content: center; align-items: center;
-            z-index: 10000; color: white; text-align: center; padding: 30px; box-sizing: border-box;
+        /* --- INDICADOR OFFLINE --- */
+        #offline-indicator {
+            position: fixed; top: 10px; right: 10px; background: var(--danger);
+            color: white; padding: 5px 12px; border-radius: 20px; font-size: 0.7rem;
+            font-weight: 800; z-index: 10001; display: none;
         }
-        #visual-feedback h2 { font-size: 3.2rem; margin: 0; font-weight: 800; line-height: 1; }
-
-        /* --- LOGIN & CARDS --- */
-        .login-screen { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--ual-blue) 0%, #0056a3 100%); padding: 20px; box-sizing: border-box; }
-        .login-card { background: rgba(255, 255, 255, 0.98); border-radius: 35px; padding: 45px 30px; width: 100%; max-width: 400px; box-shadow: 0 25px 50px rgba(0,0,0,0.3); text-align: center; }
-        
-        .logo-container { width: 100px; height: 100px; margin: 0 auto 25px; position: relative; background: var(--white); border-radius: 24px; display: flex; align-items: center; justify-content: center; border: 2px solid #f1f5f9; }
-        .scanner-svg { width: 60px; height: 60px; fill: var(--ual-blue); }
-        .laser { position: absolute; width: 80%; height: 3px; background: var(--danger); left: 10%; top: 20%; animation: scanning 2.5s infinite ease-in-out; box-shadow: 0 0 8px var(--danger); }
-        @keyframes scanning { 0%, 100% { top: 20%; } 50% { top: 80%; } }
-
-        /* --- ADMIN DASHBOARD --- */
-        .admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
-        .stat-card { background: white; padding: 15px; border-radius: 20px; text-align: center; border: 1px solid #edf2f7; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
-        .stat-card i { font-size: 1.5rem; display: block; margin-bottom: 5px; }
-        .stat-val { font-size: 1.4rem; font-weight: 800; color: var(--ual-blue); display: block; }
-        .stat-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; }
 
         /* --- APP INTERFACE --- */
         .app-header { background: var(--ual-blue); color: white; padding: 20px; text-align: center; border-radius: 0 0 25px 25px; position: sticky; top: 0; z-index: 100; }
         .container { max-width: 500px; margin: 0 auto; padding: 15px; }
         
+        /* BARRA DE FILTROS OPTIMIZADA */
+        .filter-bar { display: flex; gap: 8px; margin-bottom: 15px; overflow-x: auto; padding: 5px 0; -webkit-overflow-scrolling: touch; }
+        .chip { padding: 8px 14px; border-radius: 20px; background: var(--white); border: 1px solid #e2e8f0; font-size: 0.75rem; cursor: pointer; white-space: nowrap; color: var(--text-muted); font-weight: 800; transition: 0.2s; }
+        .chip.active { background: var(--ual-blue); color: white; border-color: var(--ual-blue); }
+
         .asistente-card { background: var(--white); border-radius: 20px; padding: 16px; display: flex; align-items: center; gap: 15px; margin-bottom: 12px; border: 1px solid #f1f5f9; transition: 0.3s; }
         .asistente-card.presente { background: #f0fff4; border-color: #c6f6d5; border-left: 5px solid var(--success); }
         .avatar { width: 48px; height: 48px; border-radius: 14px; background: #e2e8f0; color: var(--ual-blue); display: flex; align-items: center; justify-content: center; font-weight: 800; flex-shrink: 0; }
@@ -63,79 +51,62 @@
         .btn-primary { background: var(--ual-blue); color: white; font-weight: 800; border: none; margin-top: 15px; }
         .btn-outline { background: white; color: var(--ual-blue); border: 2px solid var(--ual-blue); font-weight: 800; margin-top: 15px; }
 
-        #reader { border-radius: 24px; overflow: hidden; border: 3px solid var(--ual-blue) !important; }
+        #reader { border-radius: 24px; overflow: hidden; border: 3px solid var(--ual-blue) !important; background: black; }
         .view { display: none; }
         .view.active { display: block; animation: fadeIn 0.4s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
-        #toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); padding: 14px 28px; border-radius: 50px; color: white; z-index: 9999; display: none; font-weight: 600; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        #toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); padding: 14px 28px; border-radius: 50px; color: white; z-index: 9999; display: none; font-weight: 600; box-shadow: 0 10px 20px rgba(0,0,0,0.1); text-align: center; }
     </style>
 </head>
 <body>
 
-<div id="visual-feedback">
-    <div style="font-size: 5rem;" id="fb-icon"></div>
-    <h2 id="fb-title"></h2>
-    <p id="fb-name" style="font-size: 1.5rem; font-weight: 300;"></p>
-</div>
-
+<div id="offline-indicator">MODO OFFLINE ACTIVADO</div>
 <div id="toast"></div>
 
 <div id="view-login" class="view active">
-    <div class="login-screen">
-        <div class="login-card">
-            <div class="logo-container">
-                <svg class="scanner-svg" viewBox="0 0 24 24"><path d="M3,11H5V13H3V11M11,5H13V9H11V5M7,11H9V13H7V11M5,5H9V9H5V5M15,5H19V9H15V5M3,3V9H9V3H3M15,3V9H21V3H15M3,15V21H9V15H3M3,17H5V19H3V17M11,17H13V19H11V17M13,15H15V17H13V15M17,15H19V17H17V15M19,17H21V19H19V17M15,19H17V21H15V19M19,19H21V21H19V19M11,11H13V13H11V11M13,11H15V13H13V11M17,11H19V13H17V11M13,13H15V15H13V13M15,13H17V15H15V13M11,13H13V15H11V13M5,15H9V19H5V15M15,11H17V13H15V11M17,13H19V15H17V13M19,13H21V15H19V13Z" /></svg>
-                <div class="laser"></div>
-            </div>
-            <h2>SaludUAL</h2>
+    <div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--ual-blue); padding: 20px;">
+        <div style="background: white; border-radius: 35px; padding: 40px 30px; width: 100%; max-width: 400px; text-align: center;">
+            <h2 style="color:var(--ual-blue); margin-top:0;">Acceso SaludUAL</h2>
             <input type="text" id="verificador-name" placeholder="Tu Nombre" style="margin-bottom:12px">
             <select id="actividad-select" style="margin-bottom:12px"><option value="">Cargando actividades...</option></select>
             <input type="password" id="login-pass" placeholder="Contraseña">
             <button onclick="intentarLogin()" class="btn-primary">ENTRAR</button>
-            <button onclick="accesoAdmin()" style="background:none; border:none; color:var(--text-muted); margin-top:20px; font-size:0.85rem; text-decoration: underline;">Panel Admin</button>
         </div>
-    </div>
-</div>
-
-<div id="view-admin" class="view">
-    <div class="app-header">
-        <h1>Dashboard Admin</h1>
-    </div>
-    <div class="container">
-        <div class="admin-grid">
-            <div class="stat-card"><span class="stat-val" id="adm-inscritos">0</span><span class="stat-label">👥 Inscritos</span></div>
-            <div class="stat-card" style="border-bottom: 4px solid var(--success);"><span class="stat-val" id="adm-registrados">0</span><span class="stat-label">✅ Registrados</span></div>
-            <div class="stat-card" style="border-bottom: 4px solid var(--warning);"><span class="stat-val" id="adm-pendientes">0</span><span class="stat-label">⏳ Pendientes</span></div>
-            <div class="stat-card" style="border-bottom: 4px solid var(--info);"><span class="stat-val" id="adm-rapido">0</span><span class="stat-label">⚡ Rápido</span></div>
-        </div>
-        <button onclick="showView('view-login')" class="btn-primary">VOLVER AL LOGIN</button>
     </div>
 </div>
 
 <div id="view-app" class="view">
     <div class="app-header">
-        <h1 id="display-actividad" style="margin:0; font-size: 1.2rem;"></h1>
-        <span id="verif-name-display" style="font-size: 0.8rem; opacity: 0.8;"></span>
+        <h1 id="display-actividad" style="margin:0; font-size: 1.1rem;"></h1>
+        <span id="sync-status" style="font-size: 0.7rem; opacity: 0.8;">Sincronizado</span>
     </div>
     <div class="container">
         <div id="reader" style="margin-bottom:20px;"></div>
+        
+        <div class="filter-bar">
+            <div class="chip active" onclick="setFilter('todos', this)">Todos</div>
+            <div class="chip" onclick="setFilter('pendientes', this)">Pendientes</div>
+            <div class="chip" onclick="setFilter('presentes', this)">Presentes</div>
+            <div class="chip" onclick="setFilter('rapido', this)">⚡ Rápido</div>
+        </div>
+
         <input type="text" id="input-search" placeholder="🔍 Buscar por DNI o Nombre..." onkeyup="filtrarLista()" style="margin-bottom:15px">
         <div id="lista-asistentes"></div>
         <button onclick="showView('view-registro-rapido')" class="btn-outline">➕ REGISTRO RÁPIDO</button>
-        <button onclick="location.reload()" style="background:none; border:none; color:var(--text-muted); margin-top:20px; width:100%">Cerrar Sesión</button>
+        <button onclick="location.reload()" style="background:none; border:none; color:var(--text-muted); margin-top:20px; width:100%">Finalizar</button>
     </div>
 </div>
 
 <div id="view-registro-rapido" class="view">
     <div class="container" style="margin-top: 30px;">
-        <div class="login-card" style="max-width: none;">
+        <div style="background: white; border-radius: 35px; padding: 30px; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.05);">
             <h3 style="margin-top:0;">⚡ Registro Rápido</h3>
             <input type="text" id="reg-nombre" placeholder="Nombre completo" style="margin-bottom:12px">
             <input type="text" id="reg-dni" placeholder="DNI / NIE" style="margin-bottom:12px">
             <input type="email" id="reg-email" placeholder="Email" style="margin-bottom:12px">
-            <button onclick="procesarRegistroRapido()" class="btn-primary">CONFIRMAR Y AÑADIR</button>
-            <button onclick="showView('view-app')" style="border:none; background:none; color:var(--ual-blue); margin-top:10px; font-weight:800">Volver</button>
+            <button onclick="procesarRegistroRapido()" class="btn-primary">CONFIRMAR REGISTRO</button>
+            <button onclick="showView('view-app')" style="border:none; background:none; color:var(--ual-blue); margin-top:10px; font-weight:800">Cancelar</button>
         </div>
     </div>
 </div>
@@ -144,8 +115,36 @@
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxGksUqmtIctGGBadw7hNwS5fXMOuG4IA9m1rmz8lHBAnUbKiqR3hwthJeMsdXdCw2krg/exec';
     let dbInscritos = [];
     let asistenciasLocales = new Set();
+    let registrosRapidosSet = new Set(); // Para identificar quiénes son registros rápidos
+    let colaOffline = JSON.parse(localStorage.getItem('colaOffline') || '[]');
     let configActual = { verificador: '', actividad: '' };
+    let currentFilter = 'todos';
     let html5QrCode;
+
+    window.addEventListener('online', syncOfflineData);
+    window.addEventListener('offline', () => document.getElementById('offline-indicator').style.display = 'block');
+
+    async function syncOfflineData() {
+        document.getElementById('offline-indicator').style.display = 'none';
+        if (colaOffline.length === 0) return;
+        document.getElementById('sync-status').innerText = "Sincronizando...";
+        for (let i = 0; i < colaOffline.length; i++) {
+            try {
+                await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(colaOffline[i]) });
+                colaOffline.splice(i, 1);
+                localStorage.setItem('colaOffline', JSON.stringify(colaOffline));
+                i--;
+            } catch (e) { break; }
+        }
+        document.getElementById('sync-status').innerText = "Sincronizado";
+    }
+
+    function setFilter(f, el) {
+        currentFilter = f;
+        document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+        el.classList.add('active');
+        renderLista(document.getElementById('input-search').value);
+    }
 
     window.onload = async () => {
         try {
@@ -173,25 +172,8 @@
         if(res.valid) {
             configActual = { verificador: v, actividad: a };
             document.getElementById('display-actividad').innerText = a;
-            document.getElementById('verif-name-display').innerText = "Verificador: " + v;
             cargarDatos();
         } else notify("Contraseña incorrecta", "#e74c3c");
-    }
-
-    async function accesoAdmin() {
-        const pass = prompt("Clave Admin:");
-        if(!pass) return;
-        const resp = await fetch(`${SCRIPT_URL}?action=checkPass&type=admin&pass=${encodeURIComponent(pass)}`);
-        const res = await resp.json();
-        if(res.valid) {
-            const sResp = await fetch(SCRIPT_URL + "?action=getStats");
-            const s = await sResp.json();
-            document.getElementById('adm-inscritos').innerText = s.totalInscritos;
-            document.getElementById('adm-registrados').innerText = s.totalAsistencias;
-            document.getElementById('adm-pendientes').innerText = s.totalInscritos - s.totalAsistencias;
-            document.getElementById('adm-rapido').innerText = s.registrosRapidos;
-            showView('view-admin');
-        } else alert("Error de acceso");
     }
 
     async function cargarDatos() {
@@ -204,15 +186,24 @@
     function renderLista(f = "") {
         const cont = document.getElementById('lista-asistentes');
         cont.innerHTML = "";
-        const deActividad = dbInscritos.filter(i => i.Actividad === configActual.actividad);
-        const filtrados = deActividad.filter(i => i.Nombre.toLowerCase().includes(f.toLowerCase()) || i.DNI.includes(f));
+        
+        let filtrados = dbInscritos.filter(i => 
+            i.Actividad === configActual.actividad && 
+            (i.Nombre.toLowerCase().includes(f.toLowerCase()) || i.DNI.includes(f))
+        );
+
+        // Lógica de Filtros por Chips
+        if (currentFilter === 'pendientes') filtrados = filtrados.filter(i => !asistenciasLocales.has(i.DNI));
+        if (currentFilter === 'presentes') filtrados = filtrados.filter(i => asistenciasLocales.has(i.DNI));
+        if (currentFilter === 'rapido') filtrados = filtrados.filter(i => registrosRapidosSet.has(i.DNI));
 
         filtrados.forEach(i => {
             const presente = asistenciasLocales.has(i.DNI);
+            const esRapido = registrosRapidosSet.has(i.DNI);
             const card = document.createElement('div');
             card.className = `asistente-card ${presente ? 'presente' : ''}`;
             card.innerHTML = `
-                <div class="avatar">${i.Nombre.charAt(0)}</div>
+                <div class="avatar">${esRapido ? '⚡' : (presente ? '✓' : i.Nombre.charAt(0))}</div>
                 <div style="flex-grow:1"><b>${i.Nombre}</b><br><small>${i.DNI}</small></div>
                 <button class="btn-action ${presente ? 'btn-desmarcar' : 'btn-marcar'}" onclick="gestionarAsistencia('${i.Nombre}','${i.DNI}', ${presente})">
                     ${presente ? 'ANULAR' : 'MARCAR'}
@@ -224,29 +215,42 @@
     async function gestionarAsistencia(nombre, dni, esAnulacion, email = "", tipo = "MANUAL") {
         if (esAnulacion) asistenciasLocales.delete(dni);
         else asistenciasLocales.add(dni);
-        renderLista();
-        fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ nombre, dni, actividad: configActual.actividad, verificador: configActual.verificador, tipo: esAnulacion ? "ANULACIÓN" : tipo, email }) });
+        
+        renderLista(document.getElementById('input-search').value);
+        const data = { nombre, dni, actividad: configActual.actividad, verificador: configActual.verificador, tipo: esAnulacion ? "ANULACIÓN" : tipo, email };
+
+        if (navigator.onLine) {
+            fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) });
+        } else {
+            colaOffline.push(data);
+            localStorage.setItem('colaOffline', JSON.stringify(colaOffline));
+            document.getElementById('offline-indicator').style.display = 'block';
+        }
     }
 
     function procesarRegistroRapido() {
         const n = document.getElementById('reg-nombre').value, d = document.getElementById('reg-dni').value, e = document.getElementById('reg-email').value;
         if(!n || !d || !e) return notify("Faltan datos", "#e74c3c");
         
-        // AÑADIR AL LISTADO LOCAL INMEDIATAMENTE
+        registrosRapidosSet.add(d);
         dbInscritos.unshift({ Nombre: n, DNI: d, Actividad: configActual.actividad });
         gestionarAsistencia(n, d, false, e, "Rápido");
         
-        notify("⚡ Registrado y añadido a la lista");
+        notify("⚡ Añadido y Registrado");
         showView('view-app');
         document.getElementById('reg-nombre').value = ""; document.getElementById('reg-dni').value = ""; document.getElementById('reg-email').value = "";
     }
 
     function filtrarLista() { renderLista(document.getElementById('input-search').value); }
+
     function showView(id) { 
         document.querySelectorAll('.view').forEach(v => v.classList.remove('active')); 
         document.getElementById(id).classList.add('active'); 
         if(id === 'view-app') iniciarEscaner();
-        else if(html5QrCode) html5QrCode.stop();
+        else if(html5QrCode) {
+            html5QrCode.stop().catch(() => {});
+            html5QrCode = null;
+        }
     }
 
     function iniciarEscaner() {
@@ -256,6 +260,7 @@
             if(enc && !asistenciasLocales.has(enc.DNI)) {
                 gestionarAsistencia(enc.Nombre, enc.DNI, false);
                 notify("✅ " + enc.Nombre);
+                if(navigator.vibrate) navigator.vibrate(100);
             }
         }).catch(()=>{});
     }
