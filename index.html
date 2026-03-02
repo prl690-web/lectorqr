@@ -79,12 +79,12 @@
         <div class="modern-logo">
             <svg class="qr-icon-svg" viewBox="0 0 24 24"><path d="M3 11h8V3H3v8zm2-6h4v4H5V5zM3 21h8v-8H3v8zm2-6h4v4H5v-4zM13 3v8h8V3h-8zm6 6h-4V5h4v4zM13 13h2v2h-2v-2zm2 2h2v2h-2v-2zm2-2h2v2h-2v-2zm0 4h2v2h-2v-2zm-2 2h2v2h-2v-2zm-4 0h2v2h-2v-2zm2-4h2v2h-2v-2zm0 2h2v2h-2v-2z"/></svg>
         </div>
-        <h2 style="margin:0; color:var(--ual-blue)">Acceso SaludUAL</h2>
+        <h2 style="margin:0; color:var(--ual-blue)">Acceso #SaludUAL</h2>
         <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:20px;">Control de Asistencia</p>
         
         <div style="display:flex; gap:10px; margin-bottom: 20px; background:#f1f5f9; padding:5px; border-radius:12px;">
             <button id="role-esc" style="flex:1; border:none; padding:10px; border-radius:8px; font-weight:700; cursor:pointer;" onclick="setRole('escaneador')">Escaneador</button>
-            <button id="role-adm" style="flex:1; border:none; padding:10px; border-radius:8px; font-weight:700; cursor:pointer;" onclick="setRole('admin')">Admin</button>
+            <button id="role-adm" style="flex:1; border:none; padding:10px; border-radius:8px; font-weight:700; cursor:pointer;" onclick="setRole('admin')">Administrador</button>
         </div>
 
         <div id="field-name-container">
@@ -154,11 +154,11 @@
         <div id="lista-asistentes" style="max-height: 400px; overflow-y: auto; padding-right: 5px;"></div>
         
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:15px;">
-            <button onclick="showView('view-registro-rapido')" class="btn-outline" style="font-size:0.8rem;">⚡ REGISTRO MANUAL</button>
-            <button id="btn-back-admin" onclick="showView('view-admin')" class="btn-outline" style="display:none; font-size:0.8rem;">📊 ESTADÍSTICAS</button>
+            <button onclick="showView('view-registro-rapido')" class="btn-outline" style="font-size:0.8rem;">⚡ Registro Manual</button>
+            <button id="btn-back-admin" onclick="showView('view-admin')" class="btn-outline" style="display:none; font-size:0.8rem;">📊 Estadísticas</button>
         </div>
 
-        <button onclick="location.reload()" style="border:none; background:none; color:var(--danger); width:100%; margin-top:30px; font-weight: 700; font-size: 0.9rem;">CERRAR SESIÓN</button>
+        <button onclick="location.reload()" style="border:none; background:none; color:var(--danger); width:100%; margin-top:30px; font-weight: 700; font-size: 0.9rem;">Cerrar Sesión</button>
     </div>
 </div>
 
@@ -175,7 +175,7 @@
             <input type="text" id="reg-dni" placeholder="DNI / NIE / Pasaporte">
             <input type="email" id="reg-email" placeholder="Correo Electrónico">
             
-            <button onclick="procesarRegistroRapido()" class="btn-primary" style="margin-top:10px;">GUARDAR Y MARCAR PRESENTE</button>
+            <button onclick="procesarRegistroRapido()" class="btn-primary" style="margin-top:10px;">Guardar y Marcar Presencia</button>
             <button onclick="showView('view-app')" class="btn-outline" style="margin-top:10px; border:none;">Cancelar</button>
         </div>
     </div>
