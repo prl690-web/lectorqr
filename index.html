@@ -386,10 +386,24 @@
     function procesarLecturaQR(text) {
         if (escanerPausado) return;
         const readerEl = document.getElementById('reader');
-        const dniLimpio = String(text).trim().toUpperCase();
-        const user = dbInscritos.find(i => String(i.DNI).trim().toUpperCase() === dniLimpio);
+        
+        // 1. Dividimos el contenido del QR por el símbolo #
+        const partes = text.split('#');
+        const dniQR = String(partes[0]).trim().toUpperCase();
+        const actividadQR = partes[1] ? String(partes[1]).trim() : null;
 
         escanerPausado = true;
+
+        // 2. Validar si la actividad del QR coincide con la actividad seleccionada en la App
+        if (actividadQR && actividadQR !== configActual.actividad) {
+            readerEl.className = "scan-error"; playBeep('error');
+            notify(`ACTIVIDAD INCORRECTA:<br><small>Este QR es para: ${actividadQR}</small>`, "var(--danger)");
+            setTimeout(() => { readerEl.className = ""; escanerPausado = false; }, 3000);
+            return;
+        }
+
+        // 3. Buscar al usuario en la lista de inscritos por su DNI
+        const user = dbInscritos.find(i => String(i.DNI).trim().toUpperCase() === dniQR);
 
         if (user) {
             const yaEsta = asistenciasLocales.has(String(user.DNI).trim().toUpperCase());
@@ -406,7 +420,7 @@
             }
         } else {
             readerEl.className = "scan-error"; playBeep('error');
-            notify("QR NO RECONOCIDO", "var(--danger)");
+            notify("USUARIO NO INSCRITO EN ESTA ACTIVIDAD", "var(--danger)");
         }
 
         setTimeout(() => { 
