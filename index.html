@@ -16,7 +16,7 @@
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { font-family: 'Inter', sans-serif; background-color: var(--bg); margin: 0; color: var(--text-main); }
         
-        #reader { border-radius: 20px; overflow: hidden; border: 4px solid var(--ual-blue); transition: all 0.3s ease; background: #000; position: relative; }
+        #reader { border-radius: 20px; overflow: hidden; border: 4px solid var(--ual-blue); transition: all 0.3s ease; background: #000; position: relative; min-height: 250px; }
         #reader.scan-success { border-color: var(--success) !important; box-shadow: 0 0 20px var(--success); }
         #reader.scan-warning { border-color: var(--warning) !important; box-shadow: 0 0 20px var(--warning); }
         #reader.scan-error { border-color: var(--danger) !important; box-shadow: 0 0 20px var(--danger); }
@@ -60,7 +60,6 @@
         .login-card { background: white; border-radius: 25px; padding: 30px; width: 100%; max-width: 400px; text-align: center; }
         input, select { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd; margin-bottom: 12px; font-size: 1rem; }
         
-        /* Dashboard Styles */
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
         .stat-card { background: white; padding: 20px; border-radius: 20px; text-align: center; box-shadow: var(--card-shadow); border: 1px solid #eee; }
         .stat-val { font-size: 1.8rem; font-weight: 800; color: var(--ual-blue); display: block; }
@@ -183,7 +182,7 @@
 </div>
 
 <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxvYwF3SQykZ6WWdLANcZk98GVh3hdkxNBRxwCHrVCSNT51-5-AqZiSBN24XqFf4J1pxw/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw50NabUTTNHKcOPf-GLuTL66VhV8MgwIDZmAQ-lmkMjAOMwsJkXUjkkCljOyBsVopXAQ/exec';
     let dbInscritos = [], dbAsistencias = [], asistenciasLocales = new Set();
     let configActual = { verificador: '', actividad: '', rol: 'escaneador', filtro: 'all' };
     let html5QrCode, audioCtx, escanerPausado = false;
@@ -192,7 +191,6 @@
         try {
             const response = await fetch(url);
             const text = await response.text();
-            if (text.trim() === "Servicio SaludUAL Activo") return [];
             const jsonStartIndex = text.indexOf('[');
             const jsonObjectStartIndex = text.indexOf('{');
             let cleanText = text;
@@ -310,8 +308,8 @@
     function updateDashboard() {
         const total = dbInscritos.length;
         const presentes = asistenciasLocales.size;
-        const ausentes = total - presentes;
-        const manuales = dbAsistencias.filter(a => a.Tipo === 'MANUAL').length;
+        const ausentes = Math.max(0, total - presentes);
+        const manuales = dbAsistencias.filter(a => a.Tipo === 'EXPRESS').length;
         const percent = total > 0 ? Math.round((presentes / total) * 100) : 0;
 
         document.getElementById('admin-actividad-title').innerText = configActual.actividad;
@@ -365,7 +363,7 @@
         });
     }
 
-    async function marcar(dni, nombre, anular, tipoInput = 'MANUAL') {
+    async function marcar(dni, nombre, anular, tipoInput = 'MANUAL', email = '') {
         dni = String(dni).trim().toUpperCase();
         let tipoFinal = anular ? 'ANULADO' : tipoInput;
 
@@ -381,18 +379,17 @@
         renderLista();
         updateDashboard();
         
-        const url = `${SCRIPT_URL}?action=mark&dni=${dni}&nombre=${encodeURIComponent(nombre)}&actividad=${encodeURIComponent(configActual.actividad)}&verificador=${encodeURIComponent(configActual.verificador)}&tipo=${tipoFinal}`;
+        const url = `${SCRIPT_URL}?action=mark&dni=${dni}&nombre=${encodeURIComponent(nombre)}&actividad=${encodeURIComponent(configActual.actividad)}&verificador=${encodeURIComponent(configActual.verificador)}&tipo=${tipoFinal}&email=${encodeURIComponent(email)}`;
         fetch(url, { mode: 'no-cors' }).catch(() => {});
     }
 
     function procesarLecturaQR(text) {
         if (escanerPausado) return;
-        
         const readerEl = document.getElementById('reader');
         const dniLimpio = String(text).trim().toUpperCase();
-        const user = dbInscritos.find(i => String(i.DNI).trim().toUpperCase() === dniLimpio || (i.CodigoValidacion && String(i.CodigoValidacion).trim().toUpperCase() === dniLimpio));
+        const user = dbInscritos.find(i => String(i.DNI).trim().toUpperCase() === dniLimpio);
 
-        escanerPausado = true; // Pausa inmediata para evitar rebotes
+        escanerPausado = true;
 
         if (user) {
             const yaEsta = asistenciasLocales.has(String(user.DNI).trim().toUpperCase());
@@ -412,7 +409,6 @@
             notify("QR NO RECONOCIDO", "var(--danger)");
         }
 
-        // Reinicio tras 2 segundos de pausa
         setTimeout(() => { 
             if(readerEl) readerEl.className = ""; 
             escanerPausado = false;
@@ -451,19 +447,18 @@
         
         const nombreCompleto = `${nom} ${ap1} ${ap2}`;
 
-        // Añadimos localmente para que aparezca en la lista actual
-        dbInscritos.push({ 
-            Nombre: nombreCompleto, 
-            DNI: dni, 
-            Email: em,
-            Actividad: configActual.actividad,
-            isExpress: true
-        });
+        if(!dbInscritos.some(i => String(i.DNI).toUpperCase() === dni)) {
+            dbInscritos.push({ 
+                Nombre: nombreCompleto, 
+                DNI: dni, 
+                Email: em,
+                Actividad: configActual.actividad,
+                isExpress: true
+            });
+        }
         
-        // MODIFICACIÓN AQUÍ: Enviamos el email como un argumento extra
         marcar(dni, nombreCompleto, false, 'EXPRESS', em); 
         
-        // Limpiar campos
         document.querySelectorAll('#view-registro-rapido input').forEach(i => i.value = "");
         showView('view-app');
         notify("Registro Express enviado", "var(--success)");
