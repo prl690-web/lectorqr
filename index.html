@@ -186,6 +186,7 @@
     let dbInscritos = [], dbAsistencias = [], asistenciasLocales = new Set();
     let configActual = { verificador: '', actividad: '', rol: 'escaneador', filtro: 'all' };
     let html5QrCode, audioCtx, escanerPausado = false;
+    let pollTimer = null, pendingAnular = new Set(); // sincronización entre escaneadores
 
     async function safeFetchJson(url) {
         try {
@@ -294,15 +295,43 @@
             asistenciasLocales = new Set(dbAsistencias.map(a => String(a.DNI).trim().toUpperCase()));
 
             updateDashboard();
-            
+            iniciarPolling(); // mantiene sincronizados a todos los escaneadores
+
             if (configActual.rol === 'admin') {
                 showView('view-admin');
                 document.getElementById('btn-back-admin').style.display = 'block';
             } else {
                 showView('view-app');
             }
-        } catch(e) { notify("Error al cargar datos", "var(--danger)"); } 
+        } catch(e) { notify("Error al cargar datos", "var(--danger)"); }
         finally { showLoading(false); }
+    }
+
+    // --- SINCRONIZACIÓN EN VIVO ENTRE ESCANEADORES ---
+    // Relee las asistencias cada pocos segundos y fusiona, para que lo que marca
+    // un escaneador lo vean los demás (antes cada móvil solo leía al entrar).
+    function iniciarPolling() {
+        if (pollTimer) clearInterval(pollTimer);
+        pollTimer = setInterval(refrescarAsistencias, 6000);
+    }
+    async function refrescarAsistencias() {
+        try {
+            const ra = await safeFetchJson(SCRIPT_URL + "?action=getAllAsistencias");
+            if (!Array.isArray(ra)) return;
+            const propias = ra.filter(a => a.Actividad === configActual.actividad);
+            const serverSet = new Set(propias.map(a => String(a.DNI).trim().toUpperCase()));
+            // Anulaciones locales aún no procesadas por el servidor: no las reañadas.
+            pendingAnular.forEach(dni => { if (serverSet.has(dni)) serverSet.delete(dni); else pendingAnular.delete(dni); });
+            // Marcas locales aún no confirmadas: mantenlas (evita que "desaparezcan" por el lag).
+            asistenciasLocales.forEach(dni => { if (!pendingAnular.has(dni)) serverSet.add(dni); });
+            asistenciasLocales = serverSet;
+            // Reconstruye dbAsistencias: lo del servidor + express locales que aún no estén.
+            const dniServer = new Set(propias.map(a => String(a.DNI).trim().toUpperCase()));
+            const extraLocal = dbAsistencias.filter(a => !dniServer.has(String(a.DNI).trim().toUpperCase()) && !pendingAnular.has(String(a.DNI).trim().toUpperCase()));
+            dbAsistencias = propias.concat(extraLocal);
+            renderLista();
+            updateDashboard();
+        } catch (e) { /* red intermitente: se reintenta en el siguiente ciclo */ }
     }
 
     function updateDashboard() {
@@ -369,9 +398,11 @@
 
         if (anular) {
             asistenciasLocales.delete(dni);
+            pendingAnular.add(dni); // no dejar que el refresco la reañada hasta que el servidor la quite
             dbAsistencias = dbAsistencias.filter(a => String(a.DNI).toUpperCase() !== dni);
         } else {
             asistenciasLocales.add(dni);
+            pendingAnular.delete(dni);
             dbAsistencias.push({ DNI: dni, Tipo: tipoFinal });
             playBeep('success');
         }
